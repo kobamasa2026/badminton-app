@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>バドミントン組み合わせボード V5</title>
+    <title>バドミントン組み合わせボード V6</title>
     <style>
         :root {
             --primary: #4F46E5;
@@ -38,192 +38,66 @@
             .main-board { flex-grow: 1; }
         }
 
-        /* サイドバー (設定・受付) */
-        .sidebar {
-            background: var(--surface);
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-        .settings-group {
-            background: var(--surface-light);
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .settings-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 1rem;
-        }
-        select, input[type="text"] {
-            background: var(--bg);
-            color: white;
-            border: 1px solid #4B5563;
-            padding: 8px 10px;
-            border-radius: 6px;
-            font-size: 1rem;
-            width: 100%;
-            box-sizing: border-box;
-        }
+        /* サイドバー */
+        .sidebar { background: var(--surface); padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .settings-group { background: var(--surface-light); padding: 12px; border-radius: 8px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .settings-row { display: flex; justify-content: space-between; align-items: center; font-size: 1rem; }
+        select, input[type="text"] { background: var(--bg); color: white; border: 1px solid #4B5563; padding: 8px 10px; border-radius: 6px; font-size: 1rem; width: 100%; box-sizing: border-box; }
         .btn-small { background: var(--primary); color: white; border: none; padding: 5px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1.2rem;}
         .btn-small:active { transform: scale(0.95); }
 
-        .btn-reception {
-            background: #F59E0B;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 5px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-        }
+        .btn-reception { background: #F59E0B; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
         .btn-reception:active { transform: scale(0.98); }
 
-        .active-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-            gap: 8px;
-            max-height: 400px;
-            overflow-y: auto;
-            padding-right: 5px;
-        }
-        .player-chip {
-            background: var(--surface-light);
-            border: 2px solid transparent;
-            border-radius: 6px;
-            padding: 8px 4px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
+        .active-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; max-height: 400px; overflow-y: auto; padding-right: 5px; }
+        .player-chip { background: var(--surface-light); border: 2px solid transparent; border-radius: 6px; padding: 8px 4px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; gap: 4px; }
         .player-chip:active { transform: scale(0.95); }
         .chip-name { font-size: 1rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .chip-stats { font-size: 0.75rem; color: #9CA3AF; }
         
-        /* 状態によるチップの色分け */
         .player-chip.waiting { border-color: var(--accent); background: rgba(251, 191, 36, 0.1); }
         .player-chip.playing { border-color: var(--success); background: rgba(16, 185, 129, 0.1); }
         .player-chip.next { border-color: var(--next); background: rgba(168, 85, 247, 0.1); }
 
         /* メインボード */
-        .main-board {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
+        .main-board { display: flex; flex-direction: column; gap: 20px; }
         
-        .action-bar {
-            display: flex;
-            justify-content: center;
-            background: var(--surface);
-            padding: 15px;
-            border-radius: 12px;
-        }
-        .action-btn { background: #F59E0B; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 1.3rem; font-weight: bold; cursor: pointer; width: 100%; max-width: 400px;}
+        .action-bar { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; background: var(--surface); padding: 15px; border-radius: 12px; }
+        .action-btn { background: #F59E0B; color: white; border: none; padding: 15px 20px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; flex-grow: 1; max-width: 350px; display: flex; justify-content: center; align-items: center; gap: 8px;}
+        .action-btn.btn-secondary { background: #6366F1; }
         .action-btn:active { transform: scale(0.98); }
+        .action-btn:disabled { background: #4B5563; color: #9CA3AF; cursor: not-allowed; }
 
         /* NEXTパネル */
-        .next-panel {
-            background: #2E1065;
-            border: 2px solid var(--next);
-            padding: 15px;
-            border-radius: 12px;
-            text-align: center;
-        }
+        .next-panel { background: #2E1065; border: 2px solid var(--next); padding: 15px; border-radius: 12px; text-align: center; }
         .next-panel h3 { color: #DDD6FE; font-size: 1.2rem; margin-bottom: 15px;}
-        .next-slots {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        .next-slot {
-            background: rgba(139, 92, 246, 0.3);
-            color: white;
-            font-size: 1.2rem;
-            font-weight: bold;
-            padding: 10px 20px;
-            border-radius: 8px;
-            border: 1px dashed var(--next);
-            min-width: 80px;
-        }
+        .next-slots { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        .next-slot { background: rgba(139, 92, 246, 0.3); color: white; font-size: 1.2rem; font-weight: bold; padding: 10px 20px; border-radius: 8px; border: 1px dashed var(--next); min-width: 80px; }
 
         /* コート表示 */
-        .courts-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 15px;
-        }
-        .court {
-            background: var(--surface);
-            padding: 15px;
-            border-radius: 12px;
-            text-align: center;
-            border: 2px solid var(--surface-light);
-            position: relative;
-        }
-        .court.clickable { cursor: pointer; transition: transform 0.1s, box-shadow 0.2s; }
-        .court.clickable:active { transform: scale(0.98); }
-        .court.clickable:hover { border-color: #6B7280; }
+        .courts-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
+        .court { background: var(--surface); padding: 15px; border-radius: 12px; text-align: center; border: 2px solid var(--surface-light); position: relative; display: flex; flex-direction: column;}
         
-        /* 更新されたコートの強調 */
-        .court.updated {
-            border-color: #F59E0B;
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
-            50% { box-shadow: 0 0 25px rgba(245, 158, 11, 0.8); }
-            100% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
-        }
+        .court-header { display: flex; justify-content: space-between; align-items: center; background: var(--surface-light); color: #D1D5DB; font-size: 1.2rem; font-weight: bold; padding: 8px 12px; border-radius: 6px; margin-bottom: 15px; }
+        .court-checkbox { display: flex; align-items: center; gap: 6px; font-size: 0.9rem; font-weight: normal; cursor: pointer; color: white;}
+        .court-checkbox input { transform: scale(1.3); cursor: pointer; }
 
-        .court-header { 
-            background: var(--surface-light); 
-            color: #D1D5DB; 
-            font-size: 1.2rem; 
-            font-weight: bold; 
-            padding: 6px; 
-            border-radius: 6px;
-            margin-bottom: 10px;
-        }
-        .match-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; }
-        .team { 
-            font-size: 1.2rem; 
-            font-weight: bold; 
-            background: var(--team-a); 
-            color: white;
-            padding: 10px;
-            border-radius: 8px;
-            flex-grow: 1;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-        }
+        .match-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px; flex-grow: 1;}
+        .team { font-size: 1.2rem; font-weight: bold; background: var(--team-a); color: white; padding: 10px; border-radius: 8px; flex-grow: 1; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
         .team.team-b { background: var(--team-b); }
         .vs { color: #9CA3AF; font-size: 1rem; font-weight: bold; }
         
-        .court-action-text {
-            color: #9CA3AF;
-            font-size: 0.9rem;
-            margin-top: 10px;
-        }
-        .empty-text { padding: 30px 0; color: #6B7280; font-size: 1.1rem; }
+        .court-btn { background: #374151; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; transition: background 0.2s;}
+        .court-btn:active { transform: scale(0.98); }
+        .court-btn.btn-empty { background: #EF4444; } /* 終了ボタン */
+        .court-btn.btn-fill { background: #10B981; }  /* 補充ボタン */
+
+        .empty-text { padding: 30px 0; color: #6B7280; font-size: 1.1rem; flex-grow: 1; display: flex; align-items: center; justify-content: center;}
     </style>
 </head>
 <body>
 
-    <h1>🏸 組み合わせボード V5</h1>
+    <h1>🏸 組み合わせボード V6</h1>
     
     <div class="app-container">
         
@@ -231,30 +105,18 @@
         <aside class="sidebar">
             <div class="settings-group">
                 <h3>💰 受付（参加登録）</h3>
-                <p style="font-size:0.8rem; color:#9CA3AF; margin:0 0 10px 0;">既存メンバーを選択、または新規入力</p>
-                
                 <select id="rosterSelect" style="margin-bottom:10px;">
                     <option value="">-- 登録済みから選択 --</option>
                 </select>
-                
-                <div style="text-align:center; color:#9CA3AF; font-size:0.9rem; margin-bottom:10px;">または</div>
-                
+                <div style="text-align:center; color:#9CA3AF; font-size:0.9rem; margin-bottom:10px;">または新規入力</div>
                 <input type="text" id="newName" maxlength="6" placeholder="新規ニックネーム(6文字内)">
-                
                 <button onclick="handleReception()" class="btn-reception">受付する（参加中へ）</button>
             </div>
 
             <div class="settings-group">
                 <h3>⚙️ 設定</h3>
                 <div class="settings-row">
-                    <span>進行モード</span>
-                    <select id="modeSelect" onchange="changeMode()" style="width:auto;">
-                        <option value="continuous">順次入替 (NEXT連動)</option>
-                        <option value="all">一斉入替 (従来型)</option>
-                    </select>
-                </div>
-                <div class="settings-row">
-                    <span>使用コート上限</span>
+                    <span>コート上限</span>
                     <div>
                         <button class="btn-small" onclick="changeMaxCourts(-1)">-</button>
                         <span id="courtCountDisplay" style="margin: 0 10px; font-size: 1.2rem; font-weight: bold;">6</span>
@@ -272,23 +134,26 @@
                 <h3>👥 本日の参加者 (<span id="activeCount" style="color:#F59E0B;">0</span>名)</h3>
                 <p style="font-size:0.85rem; color:#9CA3AF; margin:0 0 10px 0;">
                     枠色：<span style="color:var(--accent); font-weight:bold;">黄=待機</span>, 
-                    <span style="color:#A855F7; font-weight:bold;">紫=NEXT</span>, 
+                    <span style="color:var(--next); font-weight:bold;">紫=NEXT</span>, 
                     <span style="color:var(--success); font-weight:bold;">緑=試合中</span> 
-                    （※タップで帰宅・名簿戻し）
+                    （タップで休憩・帰宅へ）
                 </p>
-                <div class="active-grid" id="activeList">
-                    <!-- 参加中データ -->
-                </div>
+                <div class="active-grid" id="activeList"></div>
             </div>
 
-            <!-- 一斉入れ替えモード用ボタン -->
-            <div class="action-bar" id="modeAllControls" style="display: none;">
-                <button onclick="generateMatchesAll()" class="action-btn">⚡ 組み合わせを作成 (一斉)</button>
+            <!-- アクションバー（一斉補充 / 選択再抽選） -->
+            <div class="action-bar">
+                <button onclick="fillAllEmptyCourts()" class="action-btn">
+                    ⚡ 空きコートを一斉補充
+                </button>
+                <button onclick="reshuffleSelectedCourts()" class="action-btn btn-secondary">
+                    🔁 選択コートを再抽選
+                </button>
             </div>
 
-            <!-- 順次入れ替えモード用NEXTパネル -->
+            <!-- NEXTパネル -->
             <div class="next-panel" id="nextPanel">
-                <h3>⏩ NEXT 待機枠 (次の空きコートに入ります)</h3>
+                <h3>⏩ NEXT 待機枠 (順番待ちトップ4)</h3>
                 <div class="next-slots" id="nextSlots">
                     <div class="next-slot">不足</div>
                     <div class="next-slot">不足</div>
@@ -310,62 +175,58 @@
         // -------------------------
         const MAX_POSSIBLE_COURTS = 12;
         let globalData = {
-            mode: 'continuous',
             maxCourts: 6,
-            players: [], // master DB. { id, name, playCount, status: 'inactive'|'waiting'|'playing', lastAssigned, waitedRounds }
+            players: [], 
+            // player: { id, name, playCount, status: 'inactive'|'waiting'|'playing', waitStartTime, tieBreaker }
             courts: [], 
+            // court: { id, p: [id1, id2, id3, id4], selected: boolean }
             nextQueue: [] 
         };
 
         window.onload = function() {
             try {
-                let saved = localStorage.getItem('badminPlayersV5');
+                let saved = localStorage.getItem('badminPlayersV6');
                 if (saved) {
                     let parsed = JSON.parse(saved);
-                    globalData.mode = parsed.mode || 'continuous';
                     globalData.maxCourts = parsed.maxCourts || 6;
                     globalData.players = parsed.players || [];
                     globalData.courts = parsed.courts || [];
-                    globalData.nextQueue = parsed.nextQueue || [];
                 }
             } catch(e) { console.log("初期ロードスキップ"); }
             
-            document.getElementById('modeSelect').value = globalData.mode;
             adjustCourtsArray();
+            updateNextQueue();
             saveAndRender();
         };
+
+        function getNow() { return Date.now(); }
 
         // -------------------------
         // 2. 設定関連ロジック
         // -------------------------
-        function changeMode() {
-            globalData.mode = document.getElementById('modeSelect').value;
-            globalData.players.forEach(p => { if (p.status !== 'inactive') p.status = 'waiting'; });
-            globalData.courts.forEach(c => { c.p = []; c.updated = false; });
-            globalData.nextQueue = [];
-            fillNextQueue();
-            saveAndRender();
-        }
-
         function changeMaxCourts(delta) {
             let newMax = globalData.maxCourts + delta;
             if (newMax >= 1 && newMax <= MAX_POSSIBLE_COURTS) {
                 globalData.maxCourts = newMax;
                 adjustCourtsArray();
-                fillNextQueue();
+                updateNextQueue();
                 saveAndRender();
             }
         }
 
         function adjustCourtsArray() {
             while(globalData.courts.length < globalData.maxCourts) {
-                globalData.courts.push({ id: globalData.courts.length + 1, p: [], updated: false });
+                globalData.courts.push({ id: globalData.courts.length + 1, p: [], selected: false });
             }
             while(globalData.courts.length > globalData.maxCourts) {
                 let removed = globalData.courts.pop();
                 removed.p.forEach(id => {
                     let p = globalData.players.find(player => player.id === id);
-                    if (p) p.status = 'waiting';
+                    if (p) {
+                        p.status = 'waiting';
+                        p.waitStartTime = getNow();
+                        p.tieBreaker = Math.random();
+                    }
                 });
             }
         }
@@ -394,46 +255,38 @@
                 alert("登録済みリストから選択するか、新規ニックネームを入力してください。");
                 return;
             }
-
             if (newNameVal.length > 6) newNameVal = newNameVal.substring(0, 6);
 
-            // 新規入力の場合、重複チェック
             if (newNameVal) {
                 let exists = globalData.players.some(p => p.name === newNameVal);
                 if (exists) {
-                    alert("「" + newNameVal + "」は既に登録されています。別の名前を指定するか、リストから選択してください。");
+                    alert("「" + newNameVal + "」は既に登録されています。");
                     return;
                 }
             }
 
             let player = globalData.players.find(p => p.name === targetName);
-            
-            // 後から参加した人の参加回数を現在の最大回数に合わせる（追いつき優先を防ぐ）
-            let activePlayers = globalData.players.filter(p => p.status !== 'inactive');
-            let baselinePlayCount = activePlayers.length > 0 ? Math.max(...activePlayers.map(p => p.playCount)) : 0;
 
             if (!player) {
-                // 新規登録＆受付
                 player = {
-                    id: Date.now(),
+                    id: getNow(),
                     name: targetName,
-                    playCount: baselinePlayCount,
+                    playCount: 0,
                     status: 'waiting',
-                    waitedRounds: 0,
-                    lastAssigned: Date.now()
+                    waitStartTime: getNow(), // 新規参加は最後尾
+                    tieBreaker: Math.random()
                 };
                 globalData.players.push(player);
             } else {
-                // 既存メンバーの受付
                 player.status = 'waiting';
-                player.playCount = baselinePlayCount; // 長期離脱からの復帰時も優先されないようにリセット
-                player.lastAssigned = Date.now();
+                player.waitStartTime = getNow(); // 復帰時も最後尾
+                player.tieBreaker = Math.random();
             }
 
             input.value = "";
             select.value = "";
             
-            fillNextQueue();
+            updateNextQueue();
             saveAndRender();
         }
 
@@ -444,137 +297,157 @@
             if (p.status !== 'inactive') {
                 if (confirm(p.name + " さんを帰宅（休憩）状態にして名簿に戻しますか？")) {
                     p.status = 'inactive';
-                    globalData.nextQueue = globalData.nextQueue.filter(qid => qid !== id);
                     globalData.courts.forEach(c => {
                         c.p = c.p.filter(cid => cid !== id);
                     });
-                    fillNextQueue();
+                    updateNextQueue();
                     saveAndRender();
                 }
             }
         }
 
         // -------------------------
-        // 4. マッチメイキング (順次モード)
+        // 4. マッチメイキング ロジック (待機時間ベース)
         // -------------------------
-        function fillNextQueue() {
-            if (globalData.mode !== 'continuous') return;
-            
-            // 状態矛盾の解消 (NEXTに4人を超えないように厳密化)
-            globalData.nextQueue = globalData.nextQueue.filter(id => {
-                let p = globalData.players.find(p => p.id === id);
-                return p && p.status === 'waiting';
-            }).slice(0, 4);
-
-            let available = globalData.players.filter(p => p.status === 'waiting' && !globalData.nextQueue.includes(p.id));
-            
-            available.sort((a, b) => {
-                if (a.playCount !== b.playCount) return a.playCount - b.playCount;
-                return a.lastAssigned - b.lastAssigned;
-            });
-
-            while (globalData.nextQueue.length < 4 && available.length > 0) {
-                let p = available.shift();
-                globalData.nextQueue.push(p.id);
+        
+        // 順番待ちのソート関数 (古い順 -> 同着は乱数)
+        function sortWaitingPlayers(a, b) {
+            if (a.waitStartTime !== b.waitStartTime) {
+                return a.waitStartTime - b.waitStartTime; 
             }
+            return a.tieBreaker - b.tieBreaker;
         }
 
-        function handleCourtClick(courtIndex) {
-            if (globalData.mode !== 'continuous') return;
-            let court = globalData.courts[courtIndex];
+        function updateNextQueue() {
+            let waiting = globalData.players.filter(p => p.status === 'waiting');
+            waiting.sort(sortWaitingPlayers);
+            globalData.nextQueue = waiting.slice(0, 4).map(p => p.id);
+        }
 
+        // 個別コートの終了（空にする）
+        function endMatch(courtIndex) {
+            let court = globalData.courts[courtIndex];
+            let now = getNow();
+            
             court.p.forEach(id => {
-                let player = globalData.players.find(p => p.id === id);
-                if (player) {
-                    player.status = 'waiting';
-                    player.lastAssigned = Date.now(); 
+                let p = globalData.players.find(player => player.id === id);
+                if (p) {
+                    p.status = 'waiting';
+                    p.waitStartTime = now;
+                    p.tieBreaker = Math.random();
                 }
             });
-
-            fillNextQueue();
-
-            if (globalData.nextQueue.length >= 4) {
-                court.p = globalData.nextQueue.splice(0, 4);
-                let now = Date.now();
-                court.p.forEach(id => {
-                    let player = globalData.players.find(p => p.id === id);
-                    if (player) {
-                        player.status = 'playing';
-                        player.playCount++;
-                        player.lastAssigned = now;
-                    }
-                });
-                court.p.sort(() => Math.random() - 0.5);
-                
-                globalData.courts.forEach(c => c.updated = false);
-                court.updated = true;
-            } else {
-                court.p = []; 
-                globalData.courts.forEach(c => c.updated = false);
-            }
-
-            fillNextQueue();
+            
+            court.p = [];
+            court.selected = false;
+            updateNextQueue();
             saveAndRender();
         }
 
-        // -------------------------
-        // 5. マッチメイキング (一斉モード)
-        // -------------------------
-        function generateMatchesAll() {
-            globalData.players.forEach(p => { if (p.status === 'playing') p.status = 'waiting'; });
-            globalData.courts.forEach(c => { c.p = []; c.updated = false; });
-
+        // 個別コートの補充
+        function fillSingleCourt(courtIndex) {
+            let court = globalData.courts[courtIndex];
             let waiting = globalData.players.filter(p => p.status === 'waiting');
+            
             if (waiting.length < 4) {
-                alert("参加人数が4名未満です。");
+                alert("待機中の人数が4名未満のため補充できません。");
+                return;
+            }
+            
+            waiting.sort(sortWaitingPlayers);
+            let selected = waiting.slice(0, 4);
+            
+            selected.forEach(p => {
+                p.status = 'playing';
+                p.playCount++;
+                court.p.push(p.id);
+            });
+            
+            court.p.sort(() => Math.random() - 0.5); // チームをシャッフル
+            updateNextQueue();
+            saveAndRender();
+        }
+
+        // 案1：空きコートを一斉補充
+        function fillAllEmptyCourts() {
+            let emptyCourts = globalData.courts.filter(c => c.p.length === 0);
+            if (emptyCourts.length === 0) {
+                alert("空きコートがありません。");
                 return;
             }
 
-            waiting.sort((a, b) => {
-                let aPrio = a.waitedRounds > 0 ? 1 : 0;
-                let bPrio = b.waitedRounds > 0 ? 1 : 0;
-                if (aPrio !== bPrio) return bPrio - aPrio;
-                if (a.playCount !== b.playCount) return a.playCount - b.playCount;
-                return Math.random() - 0.5;
-            });
+            let waiting = globalData.players.filter(p => p.status === 'waiting');
+            waiting.sort(sortWaitingPlayers);
 
-            let courtsToUse = Math.min(globalData.maxCourts, Math.floor(waiting.length / 4));
-            let assignedCount = 0;
+            let courtsToFill = Math.min(emptyCourts.length, Math.floor(waiting.length / 4));
+            
+            if (courtsToFill === 0) {
+                alert("待機中の人数が足りません（4名単位で補充します）。");
+                return;
+            }
 
-            for (let i = 0; i < courtsToUse; i++) {
-                let selected = waiting.slice(i * 4, i * 4 + 4);
-                selected.forEach(p => {
+            // 必要な人数を抽出し、全体をシャッフルしてコートに分配（多様性アップ）
+            let selectedPlayers = waiting.slice(0, courtsToFill * 4);
+            selectedPlayers.sort(() => Math.random() - 0.5);
+
+            for (let i = 0; i < courtsToFill; i++) {
+                let court = emptyCourts[i];
+                let playersForCourt = selectedPlayers.slice(i * 4, i * 4 + 4);
+                
+                playersForCourt.forEach(p => {
                     p.status = 'playing';
                     p.playCount++;
-                    p.waitedRounds = 0;
-                    globalData.courts[i].p.push(p.id);
+                    court.p.push(p.id);
                 });
-                globalData.courts[i].p.sort(() => Math.random() - 0.5);
-                assignedCount += 4;
             }
 
-            for (let i = assignedCount; i < waiting.length; i++) {
-                waiting[i].waitedRounds++;
+            updateNextQueue();
+            saveAndRender();
+        }
+
+        // 案2：選択コートの再抽選
+        function reshuffleSelectedCourts() {
+            let selectedCourts = globalData.courts.filter(c => c.selected && c.p.length === 4);
+            
+            if (selectedCourts.length < 1) {
+                alert("再抽選したいコートの「再抽選」にチェックを入れてください。");
+                return;
             }
+
+            let playersToReshuffle = [];
+            selectedCourts.forEach(c => {
+                playersToReshuffle.push(...c.p);
+                c.p = [];
+                c.selected = false; // チェックを外す
+            });
+
+            // 集めたメンバーを完全にシャッフル
+            playersToReshuffle.sort(() => Math.random() - 0.5);
+
+            // 元のコートに戻す
+            selectedCourts.forEach((c, index) => {
+                c.p = playersToReshuffle.slice(index * 4, index * 4 + 4);
+            });
 
             saveAndRender();
         }
 
+        function toggleCourtSelection(courtIndex, isChecked) {
+            globalData.courts[courtIndex].selected = isChecked;
+            try { localStorage.setItem('badminPlayersV6', JSON.stringify(globalData)); } catch(e) {}
+        }
+
         // -------------------------
-        // 6. 描画と保存
+        // 5. 描画
         // -------------------------
         function saveAndRender() {
-            try { localStorage.setItem('badminPlayersV5', JSON.stringify(globalData)); } catch(e) {}
+            try { localStorage.setItem('badminPlayersV6', JSON.stringify(globalData)); } catch(e) {}
             
             document.getElementById('courtCountDisplay').innerText = globalData.maxCourts;
             
-            const isCont = (globalData.mode === 'continuous');
-            document.getElementById('modeAllControls').style.display = isCont ? 'none' : 'flex';
-            document.getElementById('nextPanel').style.display = isCont ? 'block' : 'none';
-
             renderRosterSelect();
             renderActiveList();
-            if (isCont) renderNext();
+            renderNext();
             renderCourts();
         }
 
@@ -584,7 +457,6 @@
             select.innerHTML = '<option value="">-- 登録済みから選択 --</option>';
             
             let inactivePlayers = globalData.players.filter(p => p.status === 'inactive');
-            // 名前順などでソート可能だが、ここでは登録順(ID順)とする
             inactivePlayers.sort((a, b) => a.id - b.id).forEach(p => {
                 select.innerHTML += `<option value="${p.name}">${p.name}</option>`;
             });
@@ -598,7 +470,7 @@
 
             let sortedPlayers = [...globalData.players]
                 .filter(p => p.status !== 'inactive')
-                .sort((a, b) => a.id - b.id);
+                .sort((a, b) => a.id - b.id); // 名簿順で表示
 
             sortedPlayers.forEach(p => {
                 let isNext = globalData.nextQueue.includes(p.id);
@@ -622,9 +494,9 @@
             for (let i = 0; i < 4; i++) {
                 if (i < globalData.nextQueue.length) {
                     let p = globalData.players.find(player => player.id === globalData.nextQueue[i]);
-                    nextArea.innerHTML += `<div class="next-slot" style="background:var(--next); border-color:#8B5CF6;">${p ? p.name : ''}</div>`;
+                    nextArea.innerHTML += `<div class="next-slot">${p ? p.name : ''}</div>`;
                 } else {
-                    nextArea.innerHTML += `<div class="next-slot">不足</div>`;
+                    nextArea.innerHTML += `<div class="next-slot" style="background:transparent; border-color:#6B7280; color:#9CA3AF;">不足</div>`;
                 }
             }
         }
@@ -632,37 +504,45 @@
         function renderCourts() {
             const area = document.getElementById('courtsArea');
             area.innerHTML = "";
-            const isCont = (globalData.mode === 'continuous');
 
             globalData.courts.forEach((c, index) => {
-                let courtClass = "court";
-                if (isCont) courtClass += " clickable";
-                if (c.updated) courtClass += " updated";
-                
-                let clickAction = isCont ? `onclick="handleCourtClick(${index})"` : "";
-                
-                let innerHtml = `<div class="court-header">コート ${c.id}</div>`;
+                let innerHtml = "";
+                let checkedAttr = c.selected ? "checked" : "";
 
                 if (c.p.length === 4) {
+                    // 試合中
                     let p1 = globalData.players.find(p => p.id === c.p[0])?.name || "";
                     let p2 = globalData.players.find(p => p.id === c.p[1])?.name || "";
                     let p3 = globalData.players.find(p => p.id === c.p[2])?.name || "";
                     let p4 = globalData.players.find(p => p.id === c.p[3])?.name || "";
                     
-                    innerHtml += `
+                    innerHtml = `
+                        <div class="court-header">
+                            コート ${c.id}
+                            <label class="court-checkbox">
+                                <input type="checkbox" onchange="toggleCourtSelection(${index}, this.checked)" ${checkedAttr}>
+                                再抽選
+                            </label>
+                        </div>
                         <div class="match-row">
                             <div class="team">${p1}<br>${p2}</div>
                             <div class="vs">VS</div>
                             <div class="team team-b">${p3}<br>${p4}</div>
                         </div>
+                        <button class="court-btn btn-empty" onclick="endMatch(${index})">⏹️ 試合終了 (空ける)</button>
                     `;
-                    if (isCont) innerHtml += `<div class="court-action-text">タップして試合終了 ➔ 次を入れる</div>`;
                 } else {
-                    innerHtml += `<div class="empty-text">待機中</div>`;
-                    if (isCont) innerHtml += `<div class="court-action-text">タップしてNEXTから補充</div>`;
+                    // 空きコート
+                    innerHtml = `
+                        <div class="court-header">
+                            コート ${c.id}
+                            <span style="font-size:0.9rem; color:#6B7280; font-weight:normal;">空き</span>
+                        </div>
+                        <div class="empty-text">待機中</div>
+                        <button class="court-btn btn-fill" onclick="fillSingleCourt(${index})">▶️ 次の4人を入れる</button>
+                    `;
                 }
-
-                area.innerHTML += `<div class="${courtClass}" ${clickAction}>${innerHtml}</div>`;
+                area.innerHTML += `<div class="court">${innerHtml}</div>`;
             });
         }
     </script>
