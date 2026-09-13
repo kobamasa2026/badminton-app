@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>バドミントン組み合わせボード V6</title>
+    <title>バドミントン組み合わせボード V7</title>
     <style>
         :root {
             --primary: #4F46E5;
@@ -11,539 +11,487 @@
             --surface: #1F2937;
             --surface-light: #374151;
             --text: #F9FAFB;
-            --accent: #FBBF24; /* 待機(黄) */
-            --next: #A855F7;   /* NEXT(紫) */
-            --success: #10B981;/* 試合中(緑) */
+            --absent: #4B5563; /* 未受付 */
+            --waiting: #F59E0B; /* 待機 */
+            --break: #EF4444;   /* 休憩 */
+            --playing: #10B981; /* 試合中 */
             --team-a: #10B981;
             --team-b: #3B82F6;
         }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 10px;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 10px; }
         h1, h2, h3 { margin: 0 0 10px 0; text-align: center; }
-        h1 { font-size: 1.8rem; color: #F59E0B; margin-bottom: 20px;}
+        h1 { font-size: 1.6rem; color: #F59E0B; margin-bottom: 15px;}
         
-        .app-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        @media (min-width: 1024px) {
-            .app-container { flex-direction: row; align-items: flex-start; }
-            .sidebar { width: 320px; flex-shrink: 0; position: sticky; top: 10px; }
-            .main-board { flex-grow: 1; }
-        }
-
-        /* サイドバー */
-        .sidebar { background: var(--surface); padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .settings-group { background: var(--surface-light); padding: 12px; border-radius: 8px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .settings-row { display: flex; justify-content: space-between; align-items: center; font-size: 1rem; }
-        select, input[type="text"] { background: var(--bg); color: white; border: 1px solid #4B5563; padding: 8px 10px; border-radius: 6px; font-size: 1rem; width: 100%; box-sizing: border-box; }
-        .btn-small { background: var(--primary); color: white; border: none; padding: 5px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1.2rem;}
-        .btn-small:active { transform: scale(0.95); }
-
-        .btn-reception { background: #F59E0B; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
-        .btn-reception:active { transform: scale(0.98); }
-
-        .active-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; max-height: 400px; overflow-y: auto; padding-right: 5px; }
-        .player-chip { background: var(--surface-light); border: 2px solid transparent; border-radius: 6px; padding: 8px 4px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; gap: 4px; }
-        .player-chip:active { transform: scale(0.95); }
-        .chip-name { font-size: 1rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .chip-stats { font-size: 0.75rem; color: #9CA3AF; }
+        .header-controls { display: flex; justify-content: space-between; align-items: center; background: var(--surface); padding: 10px 15px; border-radius: 12px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;}
+        .header-controls button { padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; color: white;}
         
-        .player-chip.waiting { border-color: var(--accent); background: rgba(251, 191, 36, 0.1); }
-        .player-chip.playing { border-color: var(--success); background: rgba(16, 185, 129, 0.1); }
-        .player-chip.next { border-color: var(--next); background: rgba(168, 85, 247, 0.1); }
+        .app-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        @media (min-width: 1024px) { .app-grid { grid-template-columns: 280px 320px 1fr; align-items: start; } }
 
-        /* メインボード */
-        .main-board { display: flex; flex-direction: column; gap: 20px; }
+        /* パネル共通 */
+        .panel { background: var(--surface); padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .panel-title { font-size: 1.1rem; color: #D1D5DB; border-bottom: 1px solid var(--surface-light); padding-bottom: 8px; margin-bottom: 12px; }
+
+        /* 入力フォーム */
+        .input-group { display: flex; gap: 5px; margin-bottom: 15px; }
+        .input-group input { flex-grow: 1; background: var(--bg); color: white; border: 1px solid #4B5563; padding: 8px; border-radius: 6px; }
+        .input-group button { background: var(--primary); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+        /* プレイヤーチップ */
+        .chip-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 8px; max-height: 50vh; overflow-y: auto; padding-right: 5px; }
+        .chip { border-radius: 6px; padding: 8px 4px; text-align: center; cursor: pointer; transition: transform 0.1s; display: flex; flex-direction: column; gap: 4px; border: 2px solid transparent; user-select: none;}
+        .chip:active { transform: scale(0.95); }
+        .chip-name { font-size: 0.95rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: white;}
+        .chip-sub { font-size: 0.7rem; color: rgba(255,255,255,0.7); }
         
-        .action-bar { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; background: var(--surface); padding: 15px; border-radius: 12px; }
-        .action-btn { background: #F59E0B; color: white; border: none; padding: 15px 20px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; flex-grow: 1; max-width: 350px; display: flex; justify-content: center; align-items: center; gap: 8px;}
-        .action-btn.btn-secondary { background: #6366F1; }
+        /* 状態カラー */
+        .chip.absent { background: var(--absent); border-color: #374151; opacity: 0.7;}
+        .chip.waiting { background: rgba(245, 158, 11, 0.15); border-color: var(--waiting); }
+        .chip.break { background: rgba(239, 68, 68, 0.15); border-color: var(--break); opacity: 0.7; }
+        .chip.playing { background: rgba(16, 185, 129, 0.15); border-color: var(--playing); }
+        .chip.next { border-color: #A855F7; box-shadow: 0 0 8px rgba(168, 85, 247, 0.5); } /* NEXT強調 */
+
+        /* メインアクション */
+        .main-actions { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;}
+        .action-btn { background: #F59E0B; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; flex-grow: 1; }
+        .action-btn.secondary { background: #6366F1; }
         .action-btn:active { transform: scale(0.98); }
-        .action-btn:disabled { background: #4B5563; color: #9CA3AF; cursor: not-allowed; }
 
-        /* NEXTパネル */
-        .next-panel { background: #2E1065; border: 2px solid var(--next); padding: 15px; border-radius: 12px; text-align: center; }
-        .next-panel h3 { color: #DDD6FE; font-size: 1.2rem; margin-bottom: 15px;}
-        .next-slots { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
-        .next-slot { background: rgba(139, 92, 246, 0.3); color: white; font-size: 1.2rem; font-weight: bold; padding: 10px 20px; border-radius: 8px; border: 1px dashed var(--next); min-width: 80px; }
+        /* NEXTリスト */
+        .next-queue { background: #2E1065; border: 1px solid #A855F7; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;}
+        .next-item { background: rgba(168,85,247,0.3); padding: 5px 15px; border-radius: 4px; font-weight: bold; color: white; }
 
-        /* コート表示 */
-        .courts-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
-        .court { background: var(--surface); padding: 15px; border-radius: 12px; text-align: center; border: 2px solid var(--surface-light); position: relative; display: flex; flex-direction: column;}
+        /* コート */
+        .courts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+        .court { background: var(--surface-light); border-radius: 10px; padding: 12px; text-align: center; border: 2px solid transparent; }
+        .court-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: #D1D5DB; font-weight: bold;}
         
-        .court-header { display: flex; justify-content: space-between; align-items: center; background: var(--surface-light); color: #D1D5DB; font-size: 1.2rem; font-weight: bold; padding: 8px 12px; border-radius: 6px; margin-bottom: 15px; }
-        .court-checkbox { display: flex; align-items: center; gap: 6px; font-size: 0.9rem; font-weight: normal; cursor: pointer; color: white;}
-        .court-checkbox input { transform: scale(1.3); cursor: pointer; }
-
-        .match-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px; flex-grow: 1;}
-        .team { font-size: 1.2rem; font-weight: bold; background: var(--team-a); color: white; padding: 10px; border-radius: 8px; flex-grow: 1; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
-        .team.team-b { background: var(--team-b); }
-        .vs { color: #9CA3AF; font-size: 1rem; font-weight: bold; }
+        .match-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; }
+        .team { font-size: 1.1rem; font-weight: bold; background: var(--team-a); color: white; padding: 10px; border-radius: 8px; flex-grow: 1; }
+        .team.b { background: var(--team-b); }
         
-        .court-btn { background: #374151; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; transition: background 0.2s;}
-        .court-btn:active { transform: scale(0.98); }
-        .court-btn.btn-empty { background: #EF4444; } /* 終了ボタン */
-        .court-btn.btn-fill { background: #10B981; }  /* 補充ボタン */
-
-        .empty-text { padding: 30px 0; color: #6B7280; font-size: 1.1rem; flex-grow: 1; display: flex; align-items: center; justify-content: center;}
+        .court-btn { width: 100%; padding: 10px; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; color: white; }
+        .btn-end { background: #EF4444; }
+        .btn-fill { background: #10B981; }
+        
+        /* モーダル (ポップアップ) */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; }
+        .modal-content { background: var(--surface); padding: 20px; border-radius: 12px; width: 90%; max-width: 300px; text-align: center; }
+        .modal-btn { display: block; width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: none; font-size: 1.1rem; font-weight: bold; cursor: pointer; color: white; }
     </style>
 </head>
 <body>
 
-    <h1>🏸 組み合わせボード V6</h1>
-    
-    <div class="app-container">
-        
-        <!-- 左側：設定・受付パネル -->
-        <aside class="sidebar">
-            <div class="settings-group">
-                <h3>💰 受付（参加登録）</h3>
-                <select id="rosterSelect" style="margin-bottom:10px;">
-                    <option value="">-- 登録済みから選択 --</option>
-                </select>
-                <div style="text-align:center; color:#9CA3AF; font-size:0.9rem; margin-bottom:10px;">または新規入力</div>
-                <input type="text" id="newName" maxlength="6" placeholder="新規ニックネーム(6文字内)">
-                <button onclick="handleReception()" class="btn-reception">受付する（参加中へ）</button>
-            </div>
-
-            <div class="settings-group">
-                <h3>⚙️ 設定</h3>
-                <div class="settings-row">
-                    <span>コート上限</span>
-                    <div>
-                        <button class="btn-small" onclick="changeMaxCourts(-1)">-</button>
-                        <span id="courtCountDisplay" style="margin: 0 10px; font-size: 1.2rem; font-weight: bold;">6</span>
-                        <button class="btn-small" onclick="changeMaxCourts(1)">+</button>
-                    </div>
-                </div>
-                <button onclick="resetData()" style="background:#EF4444; color:white; border:none; padding:8px; border-radius:6px; margin-top:10px; cursor:pointer;">⚠️ 全データリセット</button>
-            </div>
-        </aside>
-
-        <!-- 右側：メインボード -->
-        <main class="main-board">
+    <div class="header-controls">
+        <h1 style="margin:0;">🏸 組み合わせボード V7</h1>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <span style="font-size:0.9rem; color:#9CA3AF;">コート上限:</span>
+            <button style="background:#4B5563;" onclick="changeMaxCourts(-1)">-</button>
+            <span id="courtCountTxt" style="font-weight:bold; font-size:1.1rem;">6</span>
+            <button style="background:#4B5563;" onclick="changeMaxCourts(1)">+</button>
             
-            <div style="background:var(--surface); padding:15px; border-radius:12px;">
-                <h3>👥 本日の参加者 (<span id="activeCount" style="color:#F59E0B;">0</span>名)</h3>
-                <p style="font-size:0.85rem; color:#9CA3AF; margin:0 0 10px 0;">
-                    枠色：<span style="color:var(--accent); font-weight:bold;">黄=待機</span>, 
-                    <span style="color:var(--next); font-weight:bold;">紫=NEXT</span>, 
-                    <span style="color:var(--success); font-weight:bold;">緑=試合中</span> 
-                    （タップで休憩・帰宅へ）
-                </p>
-                <div class="active-grid" id="activeList"></div>
+            <button style="background:#EF4444; margin-left:15px;" onclick="startNewDay()">🌅 新しい日を始める(本日リセット)</button>
+        </div>
+    </div>
+
+    <div class="app-grid">
+        
+        <!-- 左パネル：会員名簿（マスター） -->
+        <div class="panel">
+            <h2 class="panel-title">👥 会員名簿 (未受付)</h2>
+            <div class="input-group">
+                <input type="text" id="newMemberName" maxlength="6" placeholder="新規メンバー登録">
+                <button onclick="addMember()">登録</button>
+            </div>
+            <p style="font-size:0.8rem; color:#9CA3AF; margin-bottom:10px;">タップして本日の受付を完了</p>
+            <div class="chip-container" id="absentList">
+                <!-- 未受付メンバー -->
+            </div>
+        </div>
+
+        <!-- 中パネル：本日の参加者 -->
+        <div class="panel">
+            <h2 class="panel-title">✅ 本日の参加者 (<span id="activeCount" style="color:var(--waiting);">0</span>名)</h2>
+            <p style="font-size:0.8rem; color:#9CA3AF; margin-bottom:10px;">
+                <span style="color:var(--waiting);">■待機</span> 
+                <span style="color:#A855F7;">■NEXT</span> 
+                <span style="color:var(--playing);">■試合中</span> 
+                <span style="color:var(--break);">■休憩</span><br>
+                ※タップして休憩・早退に切り替え
+            </p>
+            <div class="chip-container" id="presentList">
+                <!-- 受付済みメンバー -->
+            </div>
+        </div>
+
+        <!-- 右パネル：コート管理 -->
+        <div class="panel" style="background:transparent; padding:0; box-shadow:none;">
+            
+            <div class="main-actions">
+                <button class="action-btn" onclick="fillAllEmptyCourts()">⚡ 空きコートを一斉補充</button>
+                <button class="action-btn secondary" onclick="reshuffleSelectedCourts()">🔁 選択コートを再抽選</button>
             </div>
 
-            <!-- アクションバー（一斉補充 / 選択再抽選） -->
-            <div class="action-bar">
-                <button onclick="fillAllEmptyCourts()" class="action-btn">
-                    ⚡ 空きコートを一斉補充
-                </button>
-                <button onclick="reshuffleSelectedCourts()" class="action-btn btn-secondary">
-                    🔁 選択コートを再抽選
-                </button>
+            <div class="next-queue">
+                <span style="color:#DDD6FE; font-size:0.9rem; line-height:30px;">⏩ NEXT(順番):</span>
+                <div id="nextNames" style="display:flex; gap:8px;"></div>
             </div>
 
-            <!-- NEXTパネル -->
-            <div class="next-panel" id="nextPanel">
-                <h3>⏩ NEXT 待機枠 (順番待ちトップ4)</h3>
-                <div class="next-slots" id="nextSlots">
-                    <div class="next-slot">不足</div>
-                    <div class="next-slot">不足</div>
-                    <div class="next-slot">不足</div>
-                    <div class="next-slot">不足</div>
-                </div>
+            <div class="courts-grid" id="courtsArea">
+                <!-- コート -->
             </div>
+        </div>
 
-            <div class="courts-container" id="courtsArea">
-                <!-- コートデータ -->
-            </div>
+    </div>
 
-        </main>
+    <!-- 状態変更モーダル -->
+    <div class="modal-overlay" id="statusModal">
+        <div class="modal-content">
+            <h2 id="modalPlayerName" style="color:white; margin-bottom:20px;">名前</h2>
+            <div id="modalButtons"></div>
+            <button class="modal-btn" style="background:#4B5563; margin-top:20px;" onclick="closeModal()">キャンセル</button>
+        </div>
     </div>
 
     <script>
-        // -------------------------
-        // 1. データ構造と初期化
-        // -------------------------
-        const MAX_POSSIBLE_COURTS = 12;
-        let globalData = {
-            maxCourts: 6,
-            players: [], 
-            // player: { id, name, playCount, status: 'inactive'|'waiting'|'playing', waitStartTime, tieBreaker }
-            courts: [], 
-            // court: { id, p: [id1, id2, id3, id4], selected: boolean }
-            nextQueue: [] 
+        // ==========================================
+        // 1. データ構造 (完全に再構築)
+        // ==========================================
+        let db = {
+            players: [], // { id, name, status: 'absent'|'waiting'|'break'|'playing', playCount }
+            queue: [],   // [id, id, ...] 厳密な順番待ち配列
+            courts: [],  // { id, p: [id, id, id, id], selected: false }
+            maxCourts: 6
         };
+
+        const STORAGE_KEY = 'badmin_v7_data';
 
         window.onload = function() {
-            try {
-                let saved = localStorage.getItem('badminPlayersV6');
-                if (saved) {
+            let saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
                     let parsed = JSON.parse(saved);
-                    globalData.maxCourts = parsed.maxCourts || 6;
-                    globalData.players = parsed.players || [];
-                    globalData.courts = parsed.courts || [];
-                }
-            } catch(e) { console.log("初期ロードスキップ"); }
-            
-            adjustCourtsArray();
-            updateNextQueue();
-            saveAndRender();
+                    if (parsed.players) db.players = parsed.players;
+                    if (parsed.queue) db.queue = parsed.queue;
+                    if (parsed.courts) db.courts = parsed.courts;
+                    if (parsed.maxCourts) db.maxCourts = parsed.maxCourts;
+                } catch(e) {}
+            }
+            adjustCourts();
+            render();
         };
 
-        function getNow() { return Date.now(); }
+        function save() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+        }
 
-        // -------------------------
-        // 2. 設定関連ロジック
-        // -------------------------
+        // ==========================================
+        // 2. システム操作
+        // ==========================================
         function changeMaxCourts(delta) {
-            let newMax = globalData.maxCourts + delta;
-            if (newMax >= 1 && newMax <= MAX_POSSIBLE_COURTS) {
-                globalData.maxCourts = newMax;
-                adjustCourtsArray();
-                updateNextQueue();
-                saveAndRender();
+            let n = db.maxCourts + delta;
+            if (n >= 1 && n <= 12) {
+                db.maxCourts = n;
+                adjustCourts();
+                render();
             }
         }
 
-        function adjustCourtsArray() {
-            while(globalData.courts.length < globalData.maxCourts) {
-                globalData.courts.push({ id: globalData.courts.length + 1, p: [], selected: false });
+        function adjustCourts() {
+            while (db.courts.length < db.maxCourts) {
+                db.courts.push({ id: db.courts.length + 1, p: [], selected: false });
             }
-            while(globalData.courts.length > globalData.maxCourts) {
-                let removed = globalData.courts.pop();
-                removed.p.forEach(id => {
-                    let p = globalData.players.find(player => player.id === id);
-                    if (p) {
-                        p.status = 'waiting';
-                        p.waitStartTime = getNow();
-                        p.tieBreaker = Math.random();
+            while (db.courts.length > db.maxCourts) {
+                let removed = db.courts.pop();
+                // 減らされたコートにいた人を待機列の先頭に戻す(救済措置)
+                removed.p.reverse().forEach(id => {
+                    let player = db.players.find(p => p.id === id);
+                    if (player) {
+                        player.status = 'waiting';
+                        db.queue.unshift(id); // 先頭へ
                     }
                 });
             }
         }
 
-        function resetData() {
-            if(confirm("名簿を含む全てのデータを削除して初期化しますか？")) {
-                globalData.players = [];
-                globalData.courts = [];
-                globalData.nextQueue = [];
-                adjustCourtsArray();
-                saveAndRender();
+        function startNewDay() {
+            if (confirm("名簿(メンバー)は残したまま、本日の受付状態・コート・プレイ回数をすべてリセットしますか？\n※練習の開始時に押してください。")) {
+                db.players.forEach(p => {
+                    p.status = 'absent';
+                    p.playCount = 0;
+                });
+                db.queue = [];
+                db.courts.forEach(c => { c.p = []; c.selected = false; });
+                render();
             }
         }
 
-        // -------------------------
-        // 3. 受付・名簿ロジック
-        // -------------------------
-        function handleReception() {
-            const select = document.getElementById('rosterSelect');
-            const input = document.getElementById('newName');
-            const selectVal = select.value;
-            let newNameVal = input.value.trim();
-
-            let targetName = newNameVal || selectVal;
-            if (!targetName) {
-                alert("登録済みリストから選択するか、新規ニックネームを入力してください。");
+        // ==========================================
+        // 3. プレイヤー操作 (堅牢な状態遷移)
+        // ==========================================
+        function addMember() {
+            let input = document.getElementById('newMemberName');
+            let name = input.value.trim();
+            if (!name) return;
+            if (db.players.some(p => p.name === name)) {
+                alert("既に登録されています。");
                 return;
             }
-            if (newNameVal.length > 6) newNameVal = newNameVal.substring(0, 6);
-
-            if (newNameVal) {
-                let exists = globalData.players.some(p => p.name === newNameVal);
-                if (exists) {
-                    alert("「" + newNameVal + "」は既に登録されています。");
-                    return;
-                }
-            }
-
-            let player = globalData.players.find(p => p.name === targetName);
-
-            if (!player) {
-                player = {
-                    id: getNow(),
-                    name: targetName,
-                    playCount: 0,
-                    status: 'waiting',
-                    waitStartTime: getNow(), // 新規参加は最後尾
-                    tieBreaker: Math.random()
-                };
-                globalData.players.push(player);
-            } else {
-                player.status = 'waiting';
-                player.waitStartTime = getNow(); // 復帰時も最後尾
-                player.tieBreaker = Math.random();
-            }
-
+            db.players.push({
+                id: Date.now(),
+                name: name,
+                status: 'absent',
+                playCount: 0
+            });
             input.value = "";
-            select.value = "";
-            
-            updateNextQueue();
-            saveAndRender();
+            render();
         }
 
-        function handlePlayerClick(id) {
-            let p = globalData.players.find(p => p.id === id);
-            if (!p) return;
+        // 名簿から受付（チェックイン）
+        function checkIn(id) {
+            let player = db.players.find(p => p.id === id);
+            if (!player) return;
             
-            if (p.status !== 'inactive') {
-                if (confirm(p.name + " さんを帰宅（休憩）状態にして名簿に戻しますか？")) {
-                    p.status = 'inactive';
-                    globalData.courts.forEach(c => {
-                        c.p = c.p.filter(cid => cid !== id);
-                    });
-                    updateNextQueue();
-                    saveAndRender();
+            player.status = 'waiting';
+            db.queue.push(id); // 列の最後尾に並ぶ
+            render();
+        }
+
+        // 参加者チップをクリックした時のモーダル制御
+        let currentModalPlayerId = null;
+        function openPlayerMenu(id) {
+            let player = db.players.find(p => p.id === id);
+            if (!player) return;
+
+            if (player.status === 'playing') {
+                alert("現在試合中です。\n休憩や早退にする場合は、先にコートの試合を終了してください。");
+                return; // バグ防止: 試合中のステータス変更を物理的にブロック
+            }
+
+            currentModalPlayerId = id;
+            document.getElementById('modalPlayerName').innerText = player.name + " さん";
+            let btnHtml = "";
+
+            if (player.status === 'waiting') {
+                btnHtml += `<button class="modal-btn" style="background:var(--break);" onclick="execStatusChange('break')">☕ 休憩する</button>`;
+                btnHtml += `<button class="modal-btn" style="background:var(--absent);" onclick="execStatusChange('absent')">🏠 帰宅・受付取消</button>`;
+            } else if (player.status === 'break') {
+                btnHtml += `<button class="modal-btn" style="background:var(--waiting);" onclick="execStatusChange('waiting')">🏸 待機列に復帰する</button>`;
+                btnHtml += `<button class="modal-btn" style="background:var(--absent);" onclick="execStatusChange('absent')">🏠 帰宅する</button>`;
+            }
+
+            document.getElementById('modalButtons').innerHTML = btnHtml;
+            document.getElementById('statusModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('statusModal').style.display = 'none';
+            currentModalPlayerId = null;
+        }
+
+        function execStatusChange(newStatus) {
+            let player = db.players.find(p => p.id === currentModalPlayerId);
+            if (player) {
+                // 現在キューにいる場合は一旦削除 (重複防止)
+                db.queue = db.queue.filter(q => q !== player.id);
+                
+                player.status = newStatus;
+                
+                // 待機に戻る場合のみキューの最後尾に追加
+                if (newStatus === 'waiting') {
+                    db.queue.push(player.id);
                 }
             }
+            closeModal();
+            render();
         }
 
-        // -------------------------
-        // 4. マッチメイキング ロジック (待機時間ベース)
-        // -------------------------
+        // ==========================================
+        // 4. コート操作・マッチメイク
+        // ==========================================
         
-        // 順番待ちのソート関数 (古い順 -> 同着は乱数)
-        function sortWaitingPlayers(a, b) {
-            if (a.waitStartTime !== b.waitStartTime) {
-                return a.waitStartTime - b.waitStartTime; 
-            }
-            return a.tieBreaker - b.tieBreaker;
-        }
-
-        function updateNextQueue() {
-            let waiting = globalData.players.filter(p => p.status === 'waiting');
-            waiting.sort(sortWaitingPlayers);
-            globalData.nextQueue = waiting.slice(0, 4).map(p => p.id);
-        }
-
-        // 個別コートの終了（空にする）
-        function endMatch(courtIndex) {
-            let court = globalData.courts[courtIndex];
-            let now = getNow();
-            
+        // 1つのコートを終了する
+        function endCourt(idx) {
+            let court = db.courts[idx];
             court.p.forEach(id => {
-                let p = globalData.players.find(player => player.id === id);
-                if (p) {
-                    p.status = 'waiting';
-                    p.waitStartTime = now;
-                    p.tieBreaker = Math.random();
+                let player = db.players.find(p => p.id === id);
+                if (player) {
+                    player.status = 'waiting';
+                    db.queue.push(id); // 終わった順に最後尾へ
                 }
             });
-            
             court.p = [];
             court.selected = false;
-            updateNextQueue();
-            saveAndRender();
+            render();
         }
 
-        // 個別コートの補充
-        function fillSingleCourt(courtIndex) {
-            let court = globalData.courts[courtIndex];
-            let waiting = globalData.players.filter(p => p.status === 'waiting');
-            
-            if (waiting.length < 4) {
+        // 1つの空きコートに4人入れる
+        function fillCourt(idx) {
+            let court = db.courts[idx];
+            if (db.queue.length < 4) {
                 alert("待機中の人数が4名未満のため補充できません。");
                 return;
             }
             
-            waiting.sort(sortWaitingPlayers);
-            let selected = waiting.slice(0, 4);
-            
-            selected.forEach(p => {
-                p.status = 'playing';
-                p.playCount++;
-                court.p.push(p.id);
+            // キューの先頭から4人を取り出す (splice)
+            let selected = db.queue.splice(0, 4);
+            selected.forEach(id => {
+                let player = db.players.find(p => p.id === id);
+                player.status = 'playing';
+                player.playCount++;
+                court.p.push(id);
             });
             
-            court.p.sort(() => Math.random() - 0.5); // チームをシャッフル
-            updateNextQueue();
-            saveAndRender();
+            // チーム分けシャッフル
+            court.p.sort(() => Math.random() - 0.5);
+            render();
         }
 
-        // 案1：空きコートを一斉補充
+        // 【一斉補充】 すべての空きコートを埋める
         function fillAllEmptyCourts() {
-            let emptyCourts = globalData.courts.filter(c => c.p.length === 0);
-            if (emptyCourts.length === 0) {
-                alert("空きコートがありません。");
-                return;
-            }
-
-            let waiting = globalData.players.filter(p => p.status === 'waiting');
-            waiting.sort(sortWaitingPlayers);
-
-            let courtsToFill = Math.min(emptyCourts.length, Math.floor(waiting.length / 4));
+            let emptyCourts = db.courts.filter(c => c.p.length === 0);
+            if (emptyCourts.length === 0) return alert("空きコートがありません。");
             
-            if (courtsToFill === 0) {
-                alert("待機中の人数が足りません（4名単位で補充します）。");
-                return;
-            }
+            let courtsToFill = Math.min(emptyCourts.length, Math.floor(db.queue.length / 4));
+            if (courtsToFill === 0) return alert("待機人数が足りません（4名単位で補充します）。");
 
-            // 必要な人数を抽出し、全体をシャッフルしてコートに分配（多様性アップ）
-            let selectedPlayers = waiting.slice(0, courtsToFill * 4);
-            selectedPlayers.sort(() => Math.random() - 0.5);
+            // 必要な人数をキューから取り出す
+            let playersToAssign = db.queue.splice(0, courtsToFill * 4);
+            
+            // 全体をシャッフルして多様性を生む
+            playersToAssign.sort(() => Math.random() - 0.5);
 
             for (let i = 0; i < courtsToFill; i++) {
                 let court = emptyCourts[i];
-                let playersForCourt = selectedPlayers.slice(i * 4, i * 4 + 4);
-                
-                playersForCourt.forEach(p => {
-                    p.status = 'playing';
-                    p.playCount++;
-                    court.p.push(p.id);
+                let group = playersToAssign.slice(i * 4, i * 4 + 4);
+                group.forEach(id => {
+                    let player = db.players.find(p => p.id === id);
+                    player.status = 'playing';
+                    player.playCount++;
+                    court.p.push(id);
                 });
             }
-
-            updateNextQueue();
-            saveAndRender();
+            render();
         }
 
-        // 案2：選択コートの再抽選
+        // 【再抽選】 選択したコートのメンバーを混ぜ直す
+        function toggleCheck(idx, checked) {
+            db.courts[idx].selected = checked;
+            save();
+        }
+
         function reshuffleSelectedCourts() {
-            let selectedCourts = globalData.courts.filter(c => c.selected && c.p.length === 4);
-            
-            if (selectedCourts.length < 1) {
-                alert("再抽選したいコートの「再抽選」にチェックを入れてください。");
-                return;
-            }
+            let selected = db.courts.filter(c => c.selected && c.p.length === 4);
+            if (selected.length === 0) return alert("再抽選したいコートの「再抽選」にチェックを入れてください。");
 
-            let playersToReshuffle = [];
-            selectedCourts.forEach(c => {
-                playersToReshuffle.push(...c.p);
+            let targetPlayers = [];
+            selected.forEach(c => {
+                targetPlayers.push(...c.p);
                 c.p = [];
-                c.selected = false; // チェックを外す
+                c.selected = false;
             });
 
-            // 集めたメンバーを完全にシャッフル
-            playersToReshuffle.sort(() => Math.random() - 0.5);
+            // メンバーをシャッフルして再配置
+            targetPlayers.sort(() => Math.random() - 0.5);
 
-            // 元のコートに戻す
-            selectedCourts.forEach((c, index) => {
-                c.p = playersToReshuffle.slice(index * 4, index * 4 + 4);
+            selected.forEach((c, index) => {
+                c.p = targetPlayers.slice(index * 4, index * 4 + 4);
             });
-
-            saveAndRender();
+            render();
         }
 
-        function toggleCourtSelection(courtIndex, isChecked) {
-            globalData.courts[courtIndex].selected = isChecked;
-            try { localStorage.setItem('badminPlayersV6', JSON.stringify(globalData)); } catch(e) {}
-        }
+        // ==========================================
+        // 5. 画面の描画
+        // ==========================================
+        function render() {
+            save(); // 描画前に必ず保存
+            document.getElementById('courtCountTxt').innerText = db.maxCourts;
 
-        // -------------------------
-        // 5. 描画
-        // -------------------------
-        function saveAndRender() {
-            try { localStorage.setItem('badminPlayersV6', JSON.stringify(globalData)); } catch(e) {}
-            
-            document.getElementById('courtCountDisplay').innerText = globalData.maxCourts;
-            
-            renderRosterSelect();
-            renderActiveList();
-            renderNext();
-            renderCourts();
-        }
+            let absentHtml = "";
+            let presentHtml = "";
+            let presentCount = 0;
 
-        function renderRosterSelect() {
-            const select = document.getElementById('rosterSelect');
-            let currentVal = select.value;
-            select.innerHTML = '<option value="">-- 登録済みから選択 --</option>';
-            
-            let inactivePlayers = globalData.players.filter(p => p.status === 'inactive');
-            inactivePlayers.sort((a, b) => a.id - b.id).forEach(p => {
-                select.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-            });
-            select.value = currentVal;
-        }
-
-        function renderActiveList() {
-            const activeArea = document.getElementById('activeList');
-            activeArea.innerHTML = "";
-            let activeCount = 0;
-
-            let sortedPlayers = [...globalData.players]
-                .filter(p => p.status !== 'inactive')
-                .sort((a, b) => a.id - b.id); // 名簿順で表示
-
-            sortedPlayers.forEach(p => {
-                let isNext = globalData.nextQueue.includes(p.id);
-                let statusClass = p.status;
-                if (isNext) statusClass = 'next';
-
-                activeArea.innerHTML += `
-                    <div class="player-chip ${statusClass}" onclick="handlePlayerClick(${p.id})">
-                        <div class="chip-name">${p.name}</div>
-                        <div class="chip-stats">${p.playCount}回</div>
-                    </div>
-                `;
-                activeCount++;
-            });
-            document.getElementById('activeCount').innerText = activeCount;
-        }
-
-        function renderNext() {
-            const nextArea = document.getElementById('nextSlots');
-            nextArea.innerHTML = "";
-            for (let i = 0; i < 4; i++) {
-                if (i < globalData.nextQueue.length) {
-                    let p = globalData.players.find(player => player.id === globalData.nextQueue[i]);
-                    nextArea.innerHTML += `<div class="next-slot">${p ? p.name : ''}</div>`;
+            // 名簿リストは名前順かID順 (ここでは登録順)
+            db.players.forEach(p => {
+                let html = "";
+                if (p.status === 'absent') {
+                    // 未受付 (クリックでチェックイン)
+                    html = `<div class="chip absent" onclick="checkIn(${p.id})">
+                                <span class="chip-name">${p.name}</span>
+                                <span class="chip-sub">登録済</span>
+                            </div>`;
+                    absentHtml += html;
                 } else {
-                    nextArea.innerHTML += `<div class="next-slot" style="background:transparent; border-color:#6B7280; color:#9CA3AF;">不足</div>`;
+                    // 参加中 (クリックでモーダル)
+                    let cls = p.status;
+                    let txt = p.status === 'waiting' ? '待機' : p.status === 'break' ? '休憩' : '試合中';
+                    
+                    // NEXT対象者(キューの先頭4名)のハイライト
+                    if (p.status === 'waiting' && db.queue.indexOf(p.id) < 4 && db.queue.indexOf(p.id) !== -1) {
+                        cls += " next";
+                        txt = "NEXT";
+                    }
+
+                    html = `<div class="chip ${cls}" onclick="openPlayerMenu(${p.id})">
+                                <span class="chip-name">${p.name}</span>
+                                <span class="chip-sub">${txt} (${p.playCount}回)</span>
+                            </div>`;
+                    presentHtml += html;
+                    presentCount++;
+                }
+            });
+
+            document.getElementById('absentList').innerHTML = absentHtml;
+            document.getElementById('presentList').innerHTML = presentHtml;
+            document.getElementById('activeCount').innerText = presentCount;
+
+            // NEXTリストの描画
+            let nextHtml = "";
+            for (let i = 0; i < 4; i++) {
+                if (i < db.queue.length) {
+                    let p = db.players.find(pl => pl.id === db.queue[i]);
+                    nextHtml += `<div class="next-item">${p.name}</div>`;
+                } else {
+                    nextHtml += `<div class="next-item" style="background:transparent; border:1px dashed #6B7280; color:#9CA3AF;">不足</div>`;
                 }
             }
-        }
+            document.getElementById('nextNames').innerHTML = nextHtml;
 
-        function renderCourts() {
-            const area = document.getElementById('courtsArea');
-            area.innerHTML = "";
-
-            globalData.courts.forEach((c, index) => {
-                let innerHtml = "";
-                let checkedAttr = c.selected ? "checked" : "";
-
+            // コートの描画
+            let courtsHtml = "";
+            db.courts.forEach((c, idx) => {
+                let inner = "";
                 if (c.p.length === 4) {
-                    // 試合中
-                    let p1 = globalData.players.find(p => p.id === c.p[0])?.name || "";
-                    let p2 = globalData.players.find(p => p.id === c.p[1])?.name || "";
-                    let p3 = globalData.players.find(p => p.id === c.p[2])?.name || "";
-                    let p4 = globalData.players.find(p => p.id === c.p[3])?.name || "";
-                    
-                    innerHtml = `
+                    let p1 = db.players.find(pl => pl.id === c.p[0])?.name;
+                    let p2 = db.players.find(pl => pl.id === c.p[1])?.name;
+                    let p3 = db.players.find(pl => pl.id === c.p[2])?.name;
+                    let p4 = db.players.find(pl => pl.id === c.p[3])?.name;
+                    let checked = c.selected ? "checked" : "";
+
+                    inner = `
                         <div class="court-header">
-                            コート ${c.id}
-                            <label class="court-checkbox">
-                                <input type="checkbox" onchange="toggleCourtSelection(${index}, this.checked)" ${checkedAttr}>
-                                再抽選
+                            <span>コート ${c.id}</span>
+                            <label style="cursor:pointer; font-weight:normal; display:flex; align-items:center; gap:5px;">
+                                <input type="checkbox" style="transform:scale(1.2);" onchange="toggleCheck(${idx}, this.checked)" ${checked}>再抽選
                             </label>
                         </div>
                         <div class="match-row">
                             <div class="team">${p1}<br>${p2}</div>
-                            <div class="vs">VS</div>
-                            <div class="team team-b">${p3}<br>${p4}</div>
+                            <span style="color:#9CA3AF; font-weight:bold;">VS</span>
+                            <div class="team b">${p3}<br>${p4}</div>
                         </div>
-                        <button class="court-btn btn-empty" onclick="endMatch(${index})">⏹️ 試合終了 (空ける)</button>
+                        <button class="court-btn btn-end" onclick="endCourt(${idx})">⏹️ 試合終了 (空ける)</button>
                     `;
                 } else {
-                    // 空きコート
-                    innerHtml = `
-                        <div class="court-header">
-                            コート ${c.id}
-                            <span style="font-size:0.9rem; color:#6B7280; font-weight:normal;">空き</span>
-                        </div>
-                        <div class="empty-text">待機中</div>
-                        <button class="court-btn btn-fill" onclick="fillSingleCourt(${index})">▶️ 次の4人を入れる</button>
+                    inner = `
+                        <div class="court-header"><span>コート ${c.id}</span></div>
+                        <div style="padding:25px 0; color:#6B7280; font-weight:bold;">待機中 (空き)</div>
+                        <button class="court-btn btn-fill" onclick="fillCourt(${idx})">▶️ 次の4人を入れる</button>
                     `;
                 }
-                area.innerHTML += `<div class="court">${innerHtml}</div>`;
+                courtsHtml += `<div class="court" style="border-color:${c.p.length === 4 ? '#374151' : '#4B5563'};">${inner}</div>`;
             });
+            document.getElementById('courtsArea').innerHTML = courtsHtml;
         }
     </script>
 </body>
