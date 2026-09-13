@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>バドミントン組み合わせボード V8</title>
+    <title>バドミントン組み合わせボード V9</title>
     <style>
         :root {
             --primary: #4F46E5;
@@ -11,9 +11,9 @@
             --surface: #1F2937;
             --surface-light: #374151;
             --text: #F9FAFB;
-            --inactive: #4B5563; /* 名簿・休憩 */
-            --waiting: #F59E0B;  /* 待機 */
-            --playing: #10B981;  /* 試合中 */
+            --inactive: #4B5563; 
+            --waiting: #F59E0B;  
+            --playing: #10B981;  
             --team-a: #10B981;
             --team-b: #3B82F6;
         }
@@ -24,6 +24,8 @@
         .header-controls { display: flex; justify-content: space-between; align-items: center; background: var(--surface); padding: 10px 15px; border-radius: 12px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;}
         .header-controls button { padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; color: white;}
         .header-controls button:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .btn-undo { background: #6B7280; }
         
         .app-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
         @media (min-width: 1024px) { .app-grid { grid-template-columns: 280px 320px 1fr; align-items: start; } }
@@ -83,7 +85,7 @@
 
     <div class="header-controls">
         <div style="display:flex; gap:10px; align-items:center;">
-            <h1 style="margin:0; margin-right:15px;">🏸 ボード V8</h1>
+            <h1 style="margin:0; margin-right:15px;">🏸 ボード V9</h1>
             <button style="background:#6366F1;" onclick="exportRoster()">📤 名簿出力</button>
             <button style="background:#10B981;" onclick="document.getElementById('importFile').click()">📥 名簿読込</button>
             <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importRoster(event)">
@@ -93,12 +95,12 @@
             <button id="btnMinusCourt" style="background:#4B5563;" onclick="changeMaxCourts(-1)">-</button>
             <span id="courtCountTxt" style="font-weight:bold; font-size:1.1rem;">6</span>
             <button id="btnPlusCourt" style="background:#4B5563;" onclick="changeMaxCourts(1)">+</button>
-            <button style="background:#EF4444; margin-left:15px;" onclick="startNewDay()">🌅 新しい日を始める(本日リセット)</button>
+            <button id="btnUndo" class="btn-undo" onclick="undoAction()" disabled style="margin-left:10px;">↩️ 1つ戻る</button>
+            <button style="background:#EF4444; margin-left:5px;" onclick="startNewDay()">🌅 本日リセット</button>
         </div>
     </div>
 
     <div class="app-grid">
-        
         <!-- 左パネル：名簿・休憩 -->
         <div class="panel">
             <h2 class="panel-title">👥 名簿・休憩</h2>
@@ -107,9 +109,7 @@
                 <button onclick="addMember()">登録</button>
             </div>
             <p style="font-size:0.8rem; color:#9CA3AF; margin-bottom:10px;">タップして本日の受付（復帰）を完了</p>
-            <div class="chip-container" id="inactiveList">
-                <!-- 名簿・休憩メンバー -->
-            </div>
+            <div class="chip-container" id="inactiveList"></div>
         </div>
 
         <!-- 中パネル：本日の参加者 -->
@@ -121,29 +121,21 @@
                 <span style="color:var(--playing);">■試合中</span><br>
                 ※タップして休憩・帰宅へ移動
             </p>
-            <div class="chip-container" id="presentList">
-                <!-- 参加中メンバー -->
-            </div>
+            <div class="chip-container" id="presentList"></div>
         </div>
 
         <!-- 右パネル：コート管理 -->
         <div class="panel" style="background:transparent; padding:0; box-shadow:none;">
-            
             <div class="main-actions">
                 <button class="action-btn" onclick="fillAllEmptyCourts()">⚡ 空きコートを一斉補充</button>
                 <button class="action-btn secondary" onclick="reshuffleSelectedCourts()">🔁 選択コートを再抽選</button>
             </div>
-
             <div class="next-queue">
                 <span style="color:#DDD6FE; font-size:0.9rem; line-height:30px;">⏩ NEXT(順番):</span>
                 <div id="nextNames" style="display:flex; gap:8px;"></div>
             </div>
-
-            <div class="courts-grid" id="courtsArea">
-                <!-- コート -->
-            </div>
+            <div class="courts-grid" id="courtsArea"></div>
         </div>
-
     </div>
 
     <!-- 状態変更モーダル -->
@@ -158,16 +150,17 @@
 
     <script>
         // ==========================================
-        // 1. データ構造
+        // 1. データ構造と履歴管理 (Undo)
         // ==========================================
         let db = {
-            players: [], // { id, name, status: 'inactive'|'waiting'|'playing', playCount }
-            queue: [],   // [id, id, ...] 順番待ち配列
-            courts: [],  // { id, p: [id, id, id, id], selected: false }
+            players: [], 
+            queue: [],   
+            courts: [],  
             maxCourts: 6
         };
 
-        const STORAGE_KEY = 'badmin_v8_data';
+        const STORAGE_KEY = 'badmin_v9_data';
+        let stateHistory = []; // 履歴を保存する配列
 
         window.onload = function() {
             let saved = localStorage.getItem(STORAGE_KEY);
@@ -175,7 +168,6 @@
                 try {
                     let parsed = JSON.parse(saved);
                     if (parsed.players) {
-                        // 過去の'absent'や'break'を'inactive'に統合する互換処理
                         parsed.players.forEach(p => {
                             if (p.status === 'absent' || p.status === 'break') p.status = 'inactive';
                         });
@@ -187,11 +179,37 @@
                 } catch(e) {}
             }
             adjustCourts();
+            updateUndoButton();
             render();
         };
 
         function save() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+        }
+
+        // 操作の直前に現在の状態を保存する関数
+        function saveStateToHistory() {
+            stateHistory.push(JSON.stringify(db));
+            if (stateHistory.length > 20) {
+                stateHistory.shift(); // 最大20回分まで記憶
+            }
+            updateUndoButton();
+        }
+
+        // 1つ前の状態に戻す関数
+        function undoAction() {
+            if (stateHistory.length > 0) {
+                db = JSON.parse(stateHistory.pop());
+                updateUndoButton();
+                render();
+            }
+        }
+
+        function updateUndoButton() {
+            let btn = document.getElementById('btnUndo');
+            if (btn) {
+                btn.disabled = stateHistory.length === 0;
+            }
         }
 
         // ==========================================
@@ -216,6 +234,7 @@
                 try {
                     let imported = JSON.parse(e.target.result);
                     if (imported.players && Array.isArray(imported.players)) {
+                        saveStateToHistory(); // 履歴を保存
                         let added = 0;
                         imported.players.forEach(imp => {
                             if (!db.players.some(p => p.name === imp.name)) {
@@ -245,13 +264,13 @@
         function changeMaxCourts(delta) {
             let n = db.maxCourts + delta;
             
-            // 減らす場合の安全確認: 最後のコートで試合中なら減らさない
             if (delta < 0) {
                 let lastCourt = db.courts[db.courts.length - 1];
-                if (lastCourt && lastCourt.p.length > 0) return; // ボタン無効化でも保護
+                if (lastCourt && lastCourt.p.length > 0) return; 
             }
 
             if (n >= 1 && n <= 12) {
+                saveStateToHistory(); // 履歴を保存
                 db.maxCourts = n;
                 adjustCourts();
                 render();
@@ -263,12 +282,13 @@
                 db.courts.push({ id: db.courts.length + 1, p: [], selected: false });
             }
             while (db.courts.length > db.maxCourts) {
-                db.courts.pop(); // 事前に試合中のチェックを入れているため安全に削除
+                db.courts.pop(); 
             }
         }
 
         function startNewDay() {
             if (confirm("名簿(メンバー)は残したまま、本日の状態・コート・プレイ回数をすべてリセットしますか？\n※練習の開始時に押してください。")) {
+                saveStateToHistory(); // 履歴を保存
                 db.players.forEach(p => {
                     p.status = 'inactive';
                     p.playCount = 0;
@@ -290,6 +310,7 @@
                 alert("既に登録されています。");
                 return;
             }
+            saveStateToHistory(); // 履歴を保存
             db.players.push({
                 id: Date.now(),
                 name: name,
@@ -303,6 +324,8 @@
         function checkIn(id) {
             let player = db.players.find(p => p.id === id);
             if (!player) return;
+            
+            saveStateToHistory(); // 履歴を保存
             player.status = 'waiting';
             db.queue.push(id); 
             render();
@@ -331,6 +354,7 @@
         function execStatusChange(newStatus) {
             let player = db.players.find(p => p.id === currentModalPlayerId);
             if (player) {
+                saveStateToHistory(); // 履歴を保存
                 db.queue = db.queue.filter(q => q !== player.id);
                 player.status = newStatus;
                 if (newStatus === 'waiting') db.queue.push(player.id);
@@ -343,6 +367,7 @@
         // 5. コート操作・マッチメイク
         // ==========================================
         function endCourt(idx) {
+            saveStateToHistory(); // 履歴を保存
             let court = db.courts[idx];
             court.p.forEach(id => {
                 let player = db.players.find(p => p.id === id);
@@ -363,6 +388,7 @@
                 return;
             }
             
+            saveStateToHistory(); // 履歴を保存
             let selected = db.queue.splice(0, 4);
             selected.forEach(id => {
                 let player = db.players.find(p => p.id === id);
@@ -382,6 +408,7 @@
             let courtsToFill = Math.min(emptyCourts.length, Math.floor(db.queue.length / 4));
             if (courtsToFill === 0) return alert("待機人数が足りません（4名単位で補充します）。");
 
+            saveStateToHistory(); // 履歴を保存
             let playersToAssign = db.queue.splice(0, courtsToFill * 4);
             playersToAssign.sort(() => Math.random() - 0.5);
 
@@ -398,6 +425,7 @@
             render();
         }
 
+        // ※チェックボックスのON/OFFは履歴（戻る対象）に含めない
         function toggleCheck(idx, checked) {
             db.courts[idx].selected = checked;
             save();
@@ -407,6 +435,7 @@
             let selected = db.courts.filter(c => c.selected && c.p.length === 4);
             if (selected.length === 0) return alert("再抽選したいコートの「再抽選」にチェックを入れてください。");
 
+            saveStateToHistory(); // 履歴を保存
             let targetPlayers = [];
             selected.forEach(c => {
                 targetPlayers.push(...c.p);
@@ -428,7 +457,6 @@
         function render() {
             save();
             
-            // UI制御: 最後のコートに試合が入っているかチェックして[-]ボタンの有効/無効を切り替え
             let btnMinus = document.getElementById('btnMinusCourt');
             let lastCourt = db.courts[db.courts.length - 1];
             if (db.maxCourts <= 1 || (lastCourt && lastCourt.p.length > 0)) {
