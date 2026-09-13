@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>バドミントン組み合わせボード V7</title>
+    <title>バドミントン組み合わせボード V8</title>
     <style>
         :root {
             --primary: #4F46E5;
@@ -11,10 +11,9 @@
             --surface: #1F2937;
             --surface-light: #374151;
             --text: #F9FAFB;
-            --absent: #4B5563; /* 未受付 */
-            --waiting: #F59E0B; /* 待機 */
-            --break: #EF4444;   /* 休憩 */
-            --playing: #10B981; /* 試合中 */
+            --inactive: #4B5563; /* 名簿・休憩 */
+            --waiting: #F59E0B;  /* 待機 */
+            --playing: #10B981;  /* 試合中 */
             --team-a: #10B981;
             --team-b: #3B82F6;
         }
@@ -24,6 +23,7 @@
         
         .header-controls { display: flex; justify-content: space-between; align-items: center; background: var(--surface); padding: 10px 15px; border-radius: 12px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;}
         .header-controls button { padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; color: white;}
+        .header-controls button:disabled { opacity: 0.5; cursor: not-allowed; }
         
         .app-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
         @media (min-width: 1024px) { .app-grid { grid-template-columns: 280px 320px 1fr; align-items: start; } }
@@ -45,11 +45,10 @@
         .chip-sub { font-size: 0.7rem; color: rgba(255,255,255,0.7); }
         
         /* 状態カラー */
-        .chip.absent { background: var(--absent); border-color: #374151; opacity: 0.7;}
+        .chip.inactive { background: var(--inactive); border-color: #374151; opacity: 0.7;}
         .chip.waiting { background: rgba(245, 158, 11, 0.15); border-color: var(--waiting); }
-        .chip.break { background: rgba(239, 68, 68, 0.15); border-color: var(--break); opacity: 0.7; }
         .chip.playing { background: rgba(16, 185, 129, 0.15); border-color: var(--playing); }
-        .chip.next { border-color: #A855F7; box-shadow: 0 0 8px rgba(168, 85, 247, 0.5); } /* NEXT強調 */
+        .chip.next { border-color: #A855F7; box-shadow: 0 0 8px rgba(168, 85, 247, 0.5); }
 
         /* メインアクション */
         .main-actions { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;}
@@ -74,7 +73,7 @@
         .btn-end { background: #EF4444; }
         .btn-fill { background: #10B981; }
         
-        /* モーダル (ポップアップ) */
+        /* モーダル */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; }
         .modal-content { background: var(--surface); padding: 20px; border-radius: 12px; width: 90%; max-width: 300px; text-align: center; }
         .modal-btn { display: block; width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: none; font-size: 1.1rem; font-weight: bold; cursor: pointer; color: white; }
@@ -83,44 +82,47 @@
 <body>
 
     <div class="header-controls">
-        <h1 style="margin:0;">🏸 組み合わせボード V7</h1>
         <div style="display:flex; gap:10px; align-items:center;">
-            <span style="font-size:0.9rem; color:#9CA3AF;">コート上限:</span>
-            <button style="background:#4B5563;" onclick="changeMaxCourts(-1)">-</button>
+            <h1 style="margin:0; margin-right:15px;">🏸 ボード V8</h1>
+            <button style="background:#6366F1;" onclick="exportRoster()">📤 名簿出力</button>
+            <button style="background:#10B981;" onclick="document.getElementById('importFile').click()">📥 名簿読込</button>
+            <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importRoster(event)">
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <span style="font-size:0.9rem; color:#9CA3AF;">コート数:</span>
+            <button id="btnMinusCourt" style="background:#4B5563;" onclick="changeMaxCourts(-1)">-</button>
             <span id="courtCountTxt" style="font-weight:bold; font-size:1.1rem;">6</span>
-            <button style="background:#4B5563;" onclick="changeMaxCourts(1)">+</button>
-            
+            <button id="btnPlusCourt" style="background:#4B5563;" onclick="changeMaxCourts(1)">+</button>
             <button style="background:#EF4444; margin-left:15px;" onclick="startNewDay()">🌅 新しい日を始める(本日リセット)</button>
         </div>
     </div>
 
     <div class="app-grid">
         
-        <!-- 左パネル：会員名簿（マスター） -->
+        <!-- 左パネル：名簿・休憩 -->
         <div class="panel">
-            <h2 class="panel-title">👥 会員名簿 (未受付)</h2>
+            <h2 class="panel-title">👥 名簿・休憩</h2>
             <div class="input-group">
                 <input type="text" id="newMemberName" maxlength="6" placeholder="新規メンバー登録">
                 <button onclick="addMember()">登録</button>
             </div>
-            <p style="font-size:0.8rem; color:#9CA3AF; margin-bottom:10px;">タップして本日の受付を完了</p>
-            <div class="chip-container" id="absentList">
-                <!-- 未受付メンバー -->
+            <p style="font-size:0.8rem; color:#9CA3AF; margin-bottom:10px;">タップして本日の受付（復帰）を完了</p>
+            <div class="chip-container" id="inactiveList">
+                <!-- 名簿・休憩メンバー -->
             </div>
         </div>
 
         <!-- 中パネル：本日の参加者 -->
         <div class="panel">
-            <h2 class="panel-title">✅ 本日の参加者 (<span id="activeCount" style="color:var(--waiting);">0</span>名)</h2>
+            <h2 class="panel-title">✅ 待機・試合中 (<span id="activeCount" style="color:var(--waiting);">0</span>名)</h2>
             <p style="font-size:0.8rem; color:#9CA3AF; margin-bottom:10px;">
                 <span style="color:var(--waiting);">■待機</span> 
                 <span style="color:#A855F7;">■NEXT</span> 
-                <span style="color:var(--playing);">■試合中</span> 
-                <span style="color:var(--break);">■休憩</span><br>
-                ※タップして休憩・早退に切り替え
+                <span style="color:var(--playing);">■試合中</span><br>
+                ※タップして休憩・帰宅へ移動
             </p>
             <div class="chip-container" id="presentList">
-                <!-- 受付済みメンバー -->
+                <!-- 参加中メンバー -->
             </div>
         </div>
 
@@ -148,30 +150,37 @@
     <div class="modal-overlay" id="statusModal">
         <div class="modal-content">
             <h2 id="modalPlayerName" style="color:white; margin-bottom:20px;">名前</h2>
-            <div id="modalButtons"></div>
-            <button class="modal-btn" style="background:#4B5563; margin-top:20px;" onclick="closeModal()">キャンセル</button>
+            <p style="font-size:0.9rem; color:#9CA3AF; margin-bottom:15px;">列から離れて名簿エリアへ移動します。</p>
+            <button class="modal-btn" style="background:#EF4444;" onclick="execStatusChange('inactive')">☕ 休憩・帰宅する</button>
+            <button class="modal-btn" style="background:#4B5563; margin-top:15px;" onclick="closeModal()">キャンセル</button>
         </div>
     </div>
 
     <script>
         // ==========================================
-        // 1. データ構造 (完全に再構築)
+        // 1. データ構造
         // ==========================================
         let db = {
-            players: [], // { id, name, status: 'absent'|'waiting'|'break'|'playing', playCount }
-            queue: [],   // [id, id, ...] 厳密な順番待ち配列
+            players: [], // { id, name, status: 'inactive'|'waiting'|'playing', playCount }
+            queue: [],   // [id, id, ...] 順番待ち配列
             courts: [],  // { id, p: [id, id, id, id], selected: false }
             maxCourts: 6
         };
 
-        const STORAGE_KEY = 'badmin_v7_data';
+        const STORAGE_KEY = 'badmin_v8_data';
 
         window.onload = function() {
             let saved = localStorage.getItem(STORAGE_KEY);
             if (saved) {
                 try {
                     let parsed = JSON.parse(saved);
-                    if (parsed.players) db.players = parsed.players;
+                    if (parsed.players) {
+                        // 過去の'absent'や'break'を'inactive'に統合する互換処理
+                        parsed.players.forEach(p => {
+                            if (p.status === 'absent' || p.status === 'break') p.status = 'inactive';
+                        });
+                        db.players = parsed.players;
+                    }
                     if (parsed.queue) db.queue = parsed.queue;
                     if (parsed.courts) db.courts = parsed.courts;
                     if (parsed.maxCourts) db.maxCourts = parsed.maxCourts;
@@ -186,10 +195,62 @@
         }
 
         // ==========================================
-        // 2. システム操作
+        // 2. 名簿共有 (エクスポート/インポート)
+        // ==========================================
+        function exportRoster() {
+            let rosterData = { players: db.players.map(p => ({ id: p.id, name: p.name })) };
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(rosterData));
+            let dlNode = document.createElement('a');
+            dlNode.setAttribute("href", dataStr);
+            dlNode.setAttribute("download", "roster.json");
+            document.body.appendChild(dlNode);
+            dlNode.click();
+            dlNode.remove();
+        }
+
+        function importRoster(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let imported = JSON.parse(e.target.result);
+                    if (imported.players && Array.isArray(imported.players)) {
+                        let added = 0;
+                        imported.players.forEach(imp => {
+                            if (!db.players.some(p => p.name === imp.name)) {
+                                db.players.push({
+                                    id: imp.id || Date.now() + Math.random(),
+                                    name: imp.name,
+                                    status: 'inactive',
+                                    playCount: 0
+                                });
+                                added++;
+                            }
+                        });
+                        alert(`${added}名の新しいメンバーを名簿に追加しました！`);
+                        render();
+                    }
+                } catch(err) {
+                    alert("読込に失敗しました。正しい出力データを選択してください。");
+                }
+                event.target.value = ""; 
+            };
+            reader.readAsText(file);
+        }
+
+        // ==========================================
+        // 3. システム操作
         // ==========================================
         function changeMaxCourts(delta) {
             let n = db.maxCourts + delta;
+            
+            // 減らす場合の安全確認: 最後のコートで試合中なら減らさない
+            if (delta < 0) {
+                let lastCourt = db.courts[db.courts.length - 1];
+                if (lastCourt && lastCourt.p.length > 0) return; // ボタン無効化でも保護
+            }
+
             if (n >= 1 && n <= 12) {
                 db.maxCourts = n;
                 adjustCourts();
@@ -202,22 +263,14 @@
                 db.courts.push({ id: db.courts.length + 1, p: [], selected: false });
             }
             while (db.courts.length > db.maxCourts) {
-                let removed = db.courts.pop();
-                // 減らされたコートにいた人を待機列の先頭に戻す(救済措置)
-                removed.p.reverse().forEach(id => {
-                    let player = db.players.find(p => p.id === id);
-                    if (player) {
-                        player.status = 'waiting';
-                        db.queue.unshift(id); // 先頭へ
-                    }
-                });
+                db.courts.pop(); // 事前に試合中のチェックを入れているため安全に削除
             }
         }
 
         function startNewDay() {
-            if (confirm("名簿(メンバー)は残したまま、本日の受付状態・コート・プレイ回数をすべてリセットしますか？\n※練習の開始時に押してください。")) {
+            if (confirm("名簿(メンバー)は残したまま、本日の状態・コート・プレイ回数をすべてリセットしますか？\n※練習の開始時に押してください。")) {
                 db.players.forEach(p => {
-                    p.status = 'absent';
+                    p.status = 'inactive';
                     p.playCount = 0;
                 });
                 db.queue = [];
@@ -227,7 +280,7 @@
         }
 
         // ==========================================
-        // 3. プレイヤー操作 (堅牢な状態遷移)
+        // 4. プレイヤー操作
         // ==========================================
         function addMember() {
             let input = document.getElementById('newMemberName');
@@ -240,47 +293,33 @@
             db.players.push({
                 id: Date.now(),
                 name: name,
-                status: 'absent',
+                status: 'inactive',
                 playCount: 0
             });
             input.value = "";
             render();
         }
 
-        // 名簿から受付（チェックイン）
         function checkIn(id) {
             let player = db.players.find(p => p.id === id);
             if (!player) return;
-            
             player.status = 'waiting';
-            db.queue.push(id); // 列の最後尾に並ぶ
+            db.queue.push(id); 
             render();
         }
 
-        // 参加者チップをクリックした時のモーダル制御
         let currentModalPlayerId = null;
         function openPlayerMenu(id) {
             let player = db.players.find(p => p.id === id);
             if (!player) return;
 
             if (player.status === 'playing') {
-                alert("現在試合中です。\n休憩や早退にする場合は、先にコートの試合を終了してください。");
-                return; // バグ防止: 試合中のステータス変更を物理的にブロック
+                alert("現在試合中です。\n休憩や帰宅にする場合は、先にコートの試合を終了してください。");
+                return; 
             }
 
             currentModalPlayerId = id;
             document.getElementById('modalPlayerName').innerText = player.name + " さん";
-            let btnHtml = "";
-
-            if (player.status === 'waiting') {
-                btnHtml += `<button class="modal-btn" style="background:var(--break);" onclick="execStatusChange('break')">☕ 休憩する</button>`;
-                btnHtml += `<button class="modal-btn" style="background:var(--absent);" onclick="execStatusChange('absent')">🏠 帰宅・受付取消</button>`;
-            } else if (player.status === 'break') {
-                btnHtml += `<button class="modal-btn" style="background:var(--waiting);" onclick="execStatusChange('waiting')">🏸 待機列に復帰する</button>`;
-                btnHtml += `<button class="modal-btn" style="background:var(--absent);" onclick="execStatusChange('absent')">🏠 帰宅する</button>`;
-            }
-
-            document.getElementById('modalButtons').innerHTML = btnHtml;
             document.getElementById('statusModal').style.display = 'flex';
         }
 
@@ -292,32 +331,24 @@
         function execStatusChange(newStatus) {
             let player = db.players.find(p => p.id === currentModalPlayerId);
             if (player) {
-                // 現在キューにいる場合は一旦削除 (重複防止)
                 db.queue = db.queue.filter(q => q !== player.id);
-                
                 player.status = newStatus;
-                
-                // 待機に戻る場合のみキューの最後尾に追加
-                if (newStatus === 'waiting') {
-                    db.queue.push(player.id);
-                }
+                if (newStatus === 'waiting') db.queue.push(player.id);
             }
             closeModal();
             render();
         }
 
         // ==========================================
-        // 4. コート操作・マッチメイク
+        // 5. コート操作・マッチメイク
         // ==========================================
-        
-        // 1つのコートを終了する
         function endCourt(idx) {
             let court = db.courts[idx];
             court.p.forEach(id => {
                 let player = db.players.find(p => p.id === id);
                 if (player) {
                     player.status = 'waiting';
-                    db.queue.push(id); // 終わった順に最後尾へ
+                    db.queue.push(id); 
                 }
             });
             court.p = [];
@@ -325,7 +356,6 @@
             render();
         }
 
-        // 1つの空きコートに4人入れる
         function fillCourt(idx) {
             let court = db.courts[idx];
             if (db.queue.length < 4) {
@@ -333,7 +363,6 @@
                 return;
             }
             
-            // キューの先頭から4人を取り出す (splice)
             let selected = db.queue.splice(0, 4);
             selected.forEach(id => {
                 let player = db.players.find(p => p.id === id);
@@ -342,12 +371,10 @@
                 court.p.push(id);
             });
             
-            // チーム分けシャッフル
             court.p.sort(() => Math.random() - 0.5);
             render();
         }
 
-        // 【一斉補充】 すべての空きコートを埋める
         function fillAllEmptyCourts() {
             let emptyCourts = db.courts.filter(c => c.p.length === 0);
             if (emptyCourts.length === 0) return alert("空きコートがありません。");
@@ -355,10 +382,7 @@
             let courtsToFill = Math.min(emptyCourts.length, Math.floor(db.queue.length / 4));
             if (courtsToFill === 0) return alert("待機人数が足りません（4名単位で補充します）。");
 
-            // 必要な人数をキューから取り出す
             let playersToAssign = db.queue.splice(0, courtsToFill * 4);
-            
-            // 全体をシャッフルして多様性を生む
             playersToAssign.sort(() => Math.random() - 0.5);
 
             for (let i = 0; i < courtsToFill; i++) {
@@ -374,7 +398,6 @@
             render();
         }
 
-        // 【再抽選】 選択したコートのメンバーを混ぜ直す
         function toggleCheck(idx, checked) {
             db.courts[idx].selected = checked;
             save();
@@ -391,7 +414,6 @@
                 c.selected = false;
             });
 
-            // メンバーをシャッフルして再配置
             targetPlayers.sort(() => Math.random() - 0.5);
 
             selected.forEach((c, index) => {
@@ -401,32 +423,38 @@
         }
 
         // ==========================================
-        // 5. 画面の描画
+        // 6. 画面の描画
         // ==========================================
         function render() {
-            save(); // 描画前に必ず保存
+            save();
+            
+            // UI制御: 最後のコートに試合が入っているかチェックして[-]ボタンの有効/無効を切り替え
+            let btnMinus = document.getElementById('btnMinusCourt');
+            let lastCourt = db.courts[db.courts.length - 1];
+            if (db.maxCourts <= 1 || (lastCourt && lastCourt.p.length > 0)) {
+                btnMinus.disabled = true;
+            } else {
+                btnMinus.disabled = false;
+            }
+
             document.getElementById('courtCountTxt').innerText = db.maxCourts;
 
-            let absentHtml = "";
+            let inactiveHtml = "";
             let presentHtml = "";
             let presentCount = 0;
 
-            // 名簿リストは名前順かID順 (ここでは登録順)
             db.players.forEach(p => {
                 let html = "";
-                if (p.status === 'absent') {
-                    // 未受付 (クリックでチェックイン)
-                    html = `<div class="chip absent" onclick="checkIn(${p.id})">
+                if (p.status === 'inactive') {
+                    html = `<div class="chip inactive" onclick="checkIn(${p.id})">
                                 <span class="chip-name">${p.name}</span>
-                                <span class="chip-sub">登録済</span>
+                                <span class="chip-sub">休憩・未受付</span>
                             </div>`;
-                    absentHtml += html;
+                    inactiveHtml += html;
                 } else {
-                    // 参加中 (クリックでモーダル)
                     let cls = p.status;
-                    let txt = p.status === 'waiting' ? '待機' : p.status === 'break' ? '休憩' : '試合中';
+                    let txt = p.status === 'waiting' ? '待機' : '試合中';
                     
-                    // NEXT対象者(キューの先頭4名)のハイライト
                     if (p.status === 'waiting' && db.queue.indexOf(p.id) < 4 && db.queue.indexOf(p.id) !== -1) {
                         cls += " next";
                         txt = "NEXT";
@@ -441,11 +469,10 @@
                 }
             });
 
-            document.getElementById('absentList').innerHTML = absentHtml;
+            document.getElementById('inactiveList').innerHTML = inactiveHtml;
             document.getElementById('presentList').innerHTML = presentHtml;
             document.getElementById('activeCount').innerText = presentCount;
 
-            // NEXTリストの描画
             let nextHtml = "";
             for (let i = 0; i < 4; i++) {
                 if (i < db.queue.length) {
@@ -457,7 +484,6 @@
             }
             document.getElementById('nextNames').innerHTML = nextHtml;
 
-            // コートの描画
             let courtsHtml = "";
             db.courts.forEach((c, idx) => {
                 let inner = "";
