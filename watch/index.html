@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <!-- ズーム操作を無効化し、Apple Watchの画面にぴったり合わせる設定 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Badminton Score</title>
+    <style>
+        /* 全体の初期設定（黒背景でバッテリー消費を抑える） */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden; /* スクロール禁止 */
+            user-select: none; /* テキスト選択禁止 */
+            touch-action: manipulation; /* ダブルタップズーム禁止 */
+        }
+
+        /* --- 設定画面のスタイル --- */
+        #settings-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        h1 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .radio-group {
+            margin-bottom: 20px;
+            font-size: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            background: #222;
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+        .radio-group input {
+            margin-right: 10px;
+            transform: scale(1.5);
+        }
+        .start-btn {
+            background-color: #34C759;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 20px;
+        }
+
+        /* --- スコア画面のスタイル --- */
+        #score-screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+        }
+        
+        /* プレイヤーごとのタップ領域（画面の上下を大きく占有） */
+        .player-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 80px;
+            font-weight: bold;
+            transition: background-color 0.1s;
+        }
+        /* 上は赤、下は青を基調 */
+        #area-a { background-color: #3a0000; color: #ff4d4d; }
+        #area-b { background-color: #001a3a; color: #4da6ff; }
+        
+        /* タップした際のエフェクト */
+        #area-a:active { background-color: #ff4d4d; color: #fff; }
+        #area-b:active { background-color: #4da6ff; color: #fff; }
+
+        /* 中央のコントロール帯（元に戻す・終了） */
+        .controls {
+            height: 45px;
+            display: flex;
+            background-color: #333;
+        }
+        .ctrl-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .ctrl-btn:first-child {
+            border-right: 1px solid #555;
+            color: #FFD60A; /* 元に戻すボタンは黄色っぽく */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 設定画面 -->
+    <div id="settings-screen">
+        <h1>バドミントン<br>スコアボード</h1>
+        <div class="radio-group">
+            <label><input type="radio" name="points" value="15"> 15点マッチ</label>
+            <label><input type="radio" name="points" value="21" checked> 21点マッチ</label>
+        </div>
+        <button class="start-btn" onclick="startMatch()">スタート</button>
+    </div>
+
+    <!-- スコア画面 -->
+    <div id="score-screen">
+        <!-- 上半分のタップ領域 -->
+        <div id="area-a" class="player-area" onclick="addScore('A')">0</div>
+        
+        <!-- 中央のコントロール帯 -->
+        <div class="controls">
+            <button class="ctrl-btn" onclick="undoScore()">戻す</button>
+            <button class="ctrl-btn" onclick="endMatch()">終了</button>
+        </div>
+        
+        <!-- 下半分のタップ領域 -->
+        <div id="area-b" class="player-area" onclick="addScore('B')">0</div>
+    </div>
+
+    <script>
+        let scoreA = 0;
+        let scoreB = 0;
+        let targetPoint = 21;
+        let history = []; // 元に戻すための履歴保存用
+
+        const screenSettings = document.getElementById('settings-screen');
+        const screenScore = document.getElementById('score-screen');
+        const displayA = document.getElementById('area-a');
+        const displayB = document.getElementById('area-b');
+
+        // 試合開始
+        function startMatch() {
+            // 選択されたポイント数を取得
+            const radios = document.getElementsByName('points');
+            for (let i = 0; i < radios.length; i++) {
+                if (radios[i].checked) {
+                    targetPoint = parseInt(radios[i].value);
+                    break;
+                }
+            }
+
+            // スコアと履歴をリセット
+            scoreA = 0;
+            scoreB = 0;
+            history = [];
+            updateDisplay();
+
+            // 画面切り替え
+            screenSettings.style.display = 'none';
+            screenScore.style.display = 'flex';
+        }
+
+        // 得点追加
+        function addScore(player) {
+            // 現在のスコアを履歴に保存（Undo用）
+            history.push({ a: scoreA, b: scoreB });
+
+            if (player === 'A') {
+                scoreA++;
+            } else if (player === 'B') {
+                scoreB++;
+            }
+            updateDisplay();
+            checkWinner();
+        }
+
+        // 元に戻す (Undo)
+        function undoScore() {
+            if (history.length > 0) {
+                // 履歴から1つ前の状態を取り出して復元
+                const previousState = history.pop();
+                scoreA = previousState.a;
+                scoreB = previousState.b;
+                updateDisplay();
+            }
+        }
+
+        // 試合終了（設定画面に戻る）
+        function endMatch() {
+            if (confirm('試合を終了しますか？')) {
+                screenSettings.style.display = 'flex';
+                screenScore.style.display = 'none';
+            }
+        }
+
+        // 表示の更新
+        function updateDisplay() {
+            displayA.innerText = scoreA;
+            displayB.innerText = scoreB;
+        }
+
+        // 勝利判定
+        function checkWinner() {
+            // デュース（2点差がつくまで、もしくは上限ポイントまで）の簡易判定
+            const maxPoint = targetPoint === 21 ? 30 : 21; // 21点制は30点打ち切り、15点制は21点打ち切りの一般ルールを想定
+            
+            if ((scoreA >= targetPoint || scoreB >= targetPoint) && Math.abs(scoreA - scoreB) >= 2) {
+                alert('ゲームセット！');
+            } else if (scoreA === maxPoint || scoreB === maxPoint) {
+                alert('ゲームセット！');
+            }
+        }
+    </script>
+</body>
+</html>
