@@ -58,15 +58,11 @@
     </div>
 
     <div id="score-screen">
-        <!-- 上半分 -->
         <div id="area-a" class="player-area" onclick="addScore('A')">0</div>
-        
         <div class="controls">
             <button class="ctrl-btn" onclick="undoScore()">戻す</button>
             <button class="ctrl-btn" onclick="endMatch()">終了</button>
         </div>
-        
-        <!-- 下半分 -->
         <div id="area-b" class="player-area" onclick="addScore('B')">0</div>
     </div>
 
@@ -75,7 +71,7 @@
         let scoreB = 0;
         let targetPoint = 21;
         let history = []; 
-        let currentServer = null; // 現在のサーブ権を持っているプレイヤー
+        let currentServer = null;
 
         const screenSettings = document.getElementById('settings-screen');
         const screenScore = document.getElementById('score-screen');
@@ -92,7 +88,6 @@
             screenSettings.style.display = 'none';
             screenScore.style.display = 'flex';
 
-            // 音声合成の初期化（iOS/watchOSの制限回避のため、初回タップ時に無音を再生）
             if ('speechSynthesis' in window) {
                 let initUtterance = new SpeechSynthesisUtterance('');
                 window.speechSynthesis.speak(initUtterance);
@@ -100,20 +95,14 @@
         }
 
         function addScore(player) {
-            // 現在のスコアとサーブ権を保存（Undo用）
             history.push({ a: scoreA, b: scoreB, server: currentServer });
 
             if (player === 'A') scoreA++;
             if (player === 'B') scoreB++;
             
-            // 得点した側を次のサーバーにする
             currentServer = player;
-
             updateDisplay();
-            
-            // 音声読み上げを実行
             speakScore();
-            
             checkWinner();
         }
 
@@ -122,12 +111,9 @@
                 const previousState = history.pop();
                 scoreA = previousState.a;
                 scoreB = previousState.b;
-                currentServer = previousState.server; // サーブ権も元に戻す
+                currentServer = previousState.server;
                 updateDisplay();
-                // 戻した直後は音が混ざらないように読み上げをキャンセル
-                if ('speechSynthesis' in window) {
-                    window.speechSynthesis.cancel();
-                }
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
             }
         }
 
@@ -143,39 +129,54 @@
             displayB.innerText = scoreB;
         }
 
-        // --- スコアを英語で読み上げる関数 ---
         function speakScore() {
             if (!('speechSynthesis' in window)) return;
-            window.speechSynthesis.cancel(); // 前の音声をキャンセル
+            window.speechSynthesis.cancel();
 
             let serverScore = (currentServer === 'A') ? scoreA : scoreB;
             let receiverScore = (currentServer === 'A') ? scoreB : scoreA;
+            const maxPoint = targetPoint === 21 ? 30 : 21;
 
-            // バドミントンの読み方に変換 (0 は Love)
             let serverText = serverScore === 0 ? "love" : serverScore;
             let receiverText = receiverScore === 0 ? "love" : receiverScore;
             
             let speakText = "";
             
-            if (serverScore === receiverScore) {
-                speakText = serverText + " all"; // 同点は「オール」
+            // 勝利判定
+            const isWin = (serverScore >= targetPoint && (serverScore - receiverScore) >= 2) || serverScore === maxPoint;
+
+            if (isWin) {
+                speakText = "Game set"; // 試合終了
             } else {
-                speakText = serverText + ", " + receiverText; // サーバーの得点 → レシーバーの得点
+                // スコア読み上げ
+                if (serverScore === receiverScore) {
+                    speakText = serverText + " all";
+                } else {
+                    speakText = serverText + ", " + receiverText;
+                }
+                
+                // マッチポイント判定（次の1点で勝利するかどうか）
+                const nextScore = serverScore + 1;
+                const isMatchPoint = (nextScore >= targetPoint && (nextScore - receiverScore) >= 2) || nextScore === maxPoint;
+                
+                if (isMatchPoint) {
+                    speakText += ", Match point"; // スコアの後にマッチポイントを付け足す
+                }
             }
 
             const utterance = new SpeechSynthesisUtterance(speakText);
-            utterance.lang = 'en-US'; // 英語のネイティブ発音に設定
-            utterance.rate = 1.0; // 話す速度
-            
+            utterance.lang = 'en-US';
+            utterance.rate = 1.0;
             window.speechSynthesis.speak(utterance);
         }
 
         function checkWinner() {
             const maxPoint = targetPoint === 21 ? 30 : 21; 
             if ((scoreA >= targetPoint || scoreB >= targetPoint) && Math.abs(scoreA - scoreB) >= 2) {
-                setTimeout(() => alert('ゲームセット！'), 500);
+                // 音声が読み上げられるのを待つため、1.5秒（1500ms）遅らせてアラートを出す
+                setTimeout(() => alert('ゲームセット！'), 1500);
             } else if (scoreA === maxPoint || scoreB === maxPoint) {
-                setTimeout(() => alert('ゲームセット！'), 500);
+                setTimeout(() => alert('ゲームセット！'), 1500);
             }
         }
     </script>
