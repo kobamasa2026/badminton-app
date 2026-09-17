@@ -27,7 +27,8 @@
             padding: 10px;
             box-sizing: border-box;
         }
-        h1 { font-size: 20px; margin-bottom: 20px; text-align: center; }
+        h1 { font-size: 20px; margin-bottom: 10px; text-align: center; }
+        p.subtitle { font-size: 14px; color: #aaa; margin: 0 0 20px 0; text-align: center; }
         .radio-group { margin-bottom: 20px; font-size: 18px; display: flex; flex-direction: column; gap: 15px; }
         .radio-group label { display: flex; align-items: center; background: #222; padding: 10px 20px; border-radius: 10px; }
         .radio-group input { margin-right: 10px; transform: scale(1.5); }
@@ -35,11 +36,15 @@
 
         #score-screen { display: none; flex-direction: column; height: 100%; width: 100%; }
         
-        .player-area { flex: 1; display: flex; justify-content: center; align-items: center; font-size: 80px; font-weight: bold; transition: background-color 0.1s; }
+        .player-area { flex: 1; display: flex; justify-content: center; align-items: center; font-size: 80px; font-weight: bold; transition: background-color 0.1s; position: relative;}
+        /* ゲーム終了時のオーバーレイ用テキスト */
+        .player-area-gameover { position: absolute; font-size: 24px; color: white; background-color: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 5px;}
         #area-a { background-color: #3a0000; color: #ff4d4d; }
         #area-b { background-color: #001a3a; color: #4da6ff; }
-        #area-a:active { background-color: #ff4d4d; color: #fff; }
-        #area-b:active { background-color: #4da6ff; color: #fff; }
+        #area-a:active:not(.disabled) { background-color: #ff4d4d; color: #fff; }
+        #area-b:active:not(.disabled) { background-color: #4da6ff; color: #fff; }
+        /* 試合終了後のタップ無効化用クラス */
+        .player-area.disabled { opacity: 0.5; pointer-events: none; }
 
         .controls { height: 45px; display: flex; background-color: #333; }
         .ctrl-btn { flex: 1; background: transparent; border: none; color: white; font-size: 16px; font-weight: bold; }
@@ -50,6 +55,7 @@
 
     <div id="settings-screen">
         <h1>バドミントン<br>スコアボード</h1>
+        <p class="subtitle">【Apple Watch是正版】</p>
         <div class="radio-group">
             <label><input type="radio" name="points" value="15"> 15点マッチ</label>
             <label><input type="radio" name="points" value="21" checked> 21点マッチ</label>
@@ -72,19 +78,32 @@
         let targetPoint = 21;
         let history = []; 
         let currentServer = null;
+        let endgameTimeoutId = null; // ゲーム終了後の自動画面切り替えタイマーID
 
         const screenSettings = document.getElementById('settings-screen');
         const screenScore = document.getElementById('score-screen');
         const displayA = document.getElementById('area-a');
         const displayB = document.getElementById('area-b');
+        const playerAreas = document.querySelectorAll('.player-area');
 
         function startMatch() {
             const radios = document.getElementsByName('points');
             for (let i = 0; i < radios.length; i++) {
                 if (radios[i].checked) { targetPoint = parseInt(radios[i].value); break; }
             }
+            // スコアとタイマーの完全リセット
             scoreA = 0; scoreB = 0; history = []; currentServer = null;
+            if (endgameTimeoutId) {
+                clearTimeout(endgameTimeoutId);
+                endgameTimeoutId = null;
+            }
+            
+            // 画面表示とタップ無効化の解除
             updateDisplay();
+            playerAreas.forEach(area => area.classList.remove('disabled'));
+            const oldOverlays = document.querySelectorAll('.player-area-gameover');
+            oldOverlays.forEach(overlay => overlay.remove());
+
             screenSettings.style.display = 'none';
             screenScore.style.display = 'flex';
 
@@ -94,7 +113,24 @@
             }
         }
 
+        // 勝利判定ロジックの一元化
+        function isGameOver() {
+            const diff = Math.abs(scoreA - scoreB);
+            const cappedScore = targetPoint === 21 ? 30 : 21;
+            
+            if (scoreA === cappedScore || scoreB === cappedScore) {
+                return true;
+            }
+            if ((scoreA >= targetPoint || scoreB >= targetPoint) && diff >= 2) {
+                return true;
+            }
+            return false;
+        }
+
         function addScore(player) {
+            // 試合終了後はタップしても点数が入らないようにする
+            if (isGameOver()) return;
+            
             history.push({ a: scoreA, b: scoreB, server: currentServer });
 
             if (player === 'A') scoreA++;
@@ -108,20 +144,67 @@
 
         function undoScore() {
             if (history.length > 0) {
+                // 自動終了タイマーをキャンセル
+                if (endgameTimeoutId) {
+                    clearTimeout(endgameTimeoutId);
+                    endgameTimeoutId = null;
+                }
+                
                 const previousState = history.pop();
                 scoreA = previousState.a;
                 scoreB = previousState.b;
                 currentServer = previousState.server;
+                
+                // 表示を戻し、タップ無効化も解除
                 updateDisplay();
+                playerAreas.forEach(area => area.classList.remove('disabled'));
+                const oldOverlays = document.querySelectorAll('.player-area-gameover');
+                oldOverlays.forEach(overlay => overlay.remove());
+
                 if ('speechSynthesis' in window) window.speechSynthesis.cancel();
             }
         }
 
+        // 手動終了（確認ポップアップ付き）
         function endMatch() {
             if (confirm('試合を終了しますか？')) {
-                screenSettings.style.display = 'flex';
-                screenScore.style.display = 'none';
+                resetToSettingsScreen();
             }
+        }
+
+        // 試合終了時の自動画面切り替え処理
+        function checkWinner() {
+            if (isGameOver()) {
+                // タップ領域を無効化（視覚的にも）
+                playerAreas.forEach(area => area.classList.add('disabled'));
+                
+                // 勝利したプレイヤーの画面に「Game set」と表示
+                const winnerAreaId = (currentServer === 'A') ? 'area-a' : 'area-b';
+                const winnerArea = document.getElementById(winnerAreaId);
+                const overlay = document.createElement('div');
+                overlay.className = 'player-area-gameover';
+                overlay.innerText = 'Game set';
+                winnerArea.appendChild(overlay);
+
+                // 音声「Game set」が確実に終わる時間を確保してから設定画面へ
+                // Apple Watchの処理速度を考慮し、3秒（3000ms）に延ばしました。
+                if (endgameTimeoutId) clearTimeout(endgameTimeoutId);
+                endgameTimeoutId = setTimeout(() => {
+                    resetToSettingsScreen();
+                }, 3000);
+            }
+        }
+
+        // 設定画面に戻る共通処理
+        function resetToSettingsScreen() {
+            screenSettings.style.display = 'flex';
+            screenScore.style.display = 'none';
+            scoreA = 0; scoreB = 0; history = []; currentServer = null;
+            if (endgameTimeoutId) {
+                clearTimeout(endgameTimeoutId);
+                endgameTimeoutId = null;
+            }
+            updateDisplay();
         }
 
         function updateDisplay() {
@@ -142,25 +225,25 @@
             
             let speakText = "";
             
-            // 勝利判定
-            const isWin = (serverScore >= targetPoint && (serverScore - receiverScore) >= 2) || serverScore === maxPoint;
-
-            if (isWin) {
-                speakText = "Game set"; // 試合終了
+            if (isGameOver()) {
+                speakText = "Game set"; // 試合終了の音声だけ。スコアは言わない。
             } else {
-                // スコア読み上げ
                 if (serverScore === receiverScore) {
                     speakText = serverText + " all";
                 } else {
                     speakText = serverText + ", " + receiverText;
                 }
                 
-                // マッチポイント判定（次の1点で勝利するかどうか）
+                // マッチポイント判定
                 const nextScore = serverScore + 1;
-                const isMatchPoint = (nextScore >= targetPoint && (nextScore - receiverScore) >= 2) || nextScore === maxPoint;
+                const cappedScore = targetPoint === 21 ? 30 : 21;
+                let isMatchPoint = (nextScore === cappedScore);
+                if (!isMatchPoint) {
+                    isMatchPoint = (nextScore >= targetPoint && (nextScore - receiverScore) >= 2);
+                }
                 
                 if (isMatchPoint) {
-                    speakText += ", Match point"; // スコアの後にマッチポイントを付け足す
+                    speakText += ", Match point";
                 }
             }
 
@@ -168,16 +251,6 @@
             utterance.lang = 'en-US';
             utterance.rate = 1.0;
             window.speechSynthesis.speak(utterance);
-        }
-
-        function checkWinner() {
-            const maxPoint = targetPoint === 21 ? 30 : 21; 
-            if ((scoreA >= targetPoint || scoreB >= targetPoint) && Math.abs(scoreA - scoreB) >= 2) {
-                // 音声が読み上げられるのを待つため、1.5秒（1500ms）遅らせてアラートを出す
-                setTimeout(() => alert('ゲームセット！'), 1500);
-            } else if (scoreA === maxPoint || scoreB === maxPoint) {
-                setTimeout(() => alert('ゲームセット！'), 1500);
-            }
         }
     </script>
 </body>
