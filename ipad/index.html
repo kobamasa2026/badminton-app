@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>バドミントン組み合わせボード</title>
+    <title>バドミントン組み合わせボード V12</title>
     <style>
         :root {
             --primary: #4F46E5;
@@ -62,50 +62,56 @@
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        .section-title { font-size: 1.1rem; font-weight: bold; margin: 0 0 12px 0; color: var(--text-main); display: flex; align-items: center; justify-content: space-between;}
-        .card { background: var(--bg-surface); border-radius: 16px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 16px; }
+        .section-title { font-size: 1.2rem; font-weight: 900; margin: 0 0 12px 0; color: var(--text-main); display: flex; align-items: center; justify-content: space-between;}
+        .card { background: var(--bg-surface); border-radius: 16px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 16px; }
         
-        .btn-primary { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 1rem; width: 100%; cursor: pointer; }
-        .btn-secondary { background: #E5E7EB; color: var(--text-main); border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 900; font-size: 1.1rem; width: 100%; cursor: pointer; }
+        .btn-secondary { background: #E5E7EB; color: var(--text-main); border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .btn-danger { background: #FEE2E2; color: #DC2626; border: none; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 1rem; width: 100%; cursor: pointer; }
 
         .input-text { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; background: var(--bg-base); outline: none; }
         
-        .next-queue-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; }
+        /* NEXT 巨大化 */
+        .next-queue-container { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 12px; scroll-snap-type: x mandatory; }
         .next-slot {
-            flex: 0 0 auto; width: 80px; height: 80px; border-radius: 50%; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; background: #F3E8FF; border: 2px solid var(--status-next);
-            color: var(--status-next); font-weight: bold; scroll-snap-align: start;
+            flex: 0 0 auto; width: 100px; height: 100px; border-radius: 50%; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; background: #F3E8FF; border: 3px solid var(--status-next);
+            color: var(--status-next); font-weight: 900; scroll-snap-align: start; box-shadow: 0 4px 6px rgba(139, 92, 246, 0.2);
         }
-        .next-slot.empty { background: var(--bg-base); border: 2px dashed var(--border); color: var(--text-sub); }
+        .next-slot-name { font-size: 1.3rem; margin-bottom: 2px;}
+        .next-slot.empty { background: var(--bg-base); border: 3px dashed var(--border); color: var(--text-sub); box-shadow: none; }
+        .next-slot.empty .next-slot-name { font-size: 1.1rem; }
 
-        .courts-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
-        @media(min-width: 768px) { .courts-grid { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); } }
+        /* コート 巨大化 */
+        .courts-grid { display: grid; gap: 20px; grid-template-columns: 1fr; }
+        @media(min-width: 768px) { .courts-grid { grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); } }
         
-        .court-card { border: 2px solid transparent; display: flex; flex-direction: column; }
-        .court-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;}
-        .court-title { font-weight: 800; font-size: 1.1rem; color: var(--text-main); }
+        .court-card { border: 2px solid transparent; display: flex; flex-direction: column; padding: 20px; }
+        .court-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 2px solid var(--border); padding-bottom: 12px;}
+        .court-title { font-weight: 900; font-size: 1.6rem; color: var(--text-main); letter-spacing: 1px;}
         
-        .team-box { background: var(--bg-base); border-radius: 12px; padding: 12px; flex: 1; text-align: center; }
-        .team-box.playing { background: #D1FAE5; color: #065F46; border: 1px solid var(--status-playing); }
-        .player-name { font-weight: bold; font-size: 1.1rem; margin: 2px 0; }
+        .team-box { background: var(--bg-base); border-radius: 16px; padding: 16px 8px; flex: 1; text-align: center; }
+        .team-box.playing { background: #D1FAE5; color: #022C22; border: 4px solid var(--status-playing); box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2); }
+        .player-name { font-weight: 900; font-size: clamp(1.6rem, 5vw + 0.5rem, 2.6rem); margin: 6px 0; letter-spacing: 1px; line-height: 1.15; word-break: keep-all;}
         
-        .vs-badge { background: var(--text-main); color: white; font-size: 0.7rem; font-weight: bold; padding: 4px 8px; border-radius: 12px; margin: 0 8px; }
-        .match-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-grow: 1;}
-        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;}
+        .vs-badge { background: var(--text-main); color: white; font-size: 1.1rem; font-weight: 900; padding: 8px 16px; border-radius: 16px; margin: 0 12px; }
+        .match-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-grow: 1;}
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;}
 
-        .list-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+        /* リスト表示 */
+        .list-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
         .list-row:last-child { border-bottom: none; }
         .member-info { display: flex; align-items: center; gap: 12px; }
-        .status-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .status-dot { width: 14px; height: 14px; border-radius: 50%; }
         .dot-waiting { background: var(--status-waiting); }
         .dot-playing { background: var(--status-playing); }
         .dot-inactive { background: var(--status-inactive); }
         .dot-next { background: var(--status-next); box-shadow: 0 0 6px var(--status-next);}
-        .member-name { font-weight: bold; font-size: 1.1rem; }
-        .member-meta { font-size: 0.8rem; color: var(--text-sub); display: flex; gap: 8px;}
+        .member-name { font-weight: 900; font-size: 1.2rem; }
+        .member-meta { font-size: 0.9rem; color: var(--text-sub); display: flex; gap: 8px; font-weight: bold;}
 
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: flex-end; padding: 16px; padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+        /* モーダル */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 100; justify-content: center; align-items: flex-end; padding: 16px; padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
         .modal-content { background: var(--bg-surface); padding: 24px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; animation: slideUp 0.2s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
     </style>
@@ -113,14 +119,14 @@
 <body>
 
     <header>
-        <h1 class="header-title">バドミントン管理 V11</h1>
+        <h1 class="header-title">バドミントン管理 V12</h1>
         <button id="btnUndo" class="btn-undo" onclick="undoAction()" disabled><span>↩️</span> 戻る</button>
     </header>
 
     <main>
         <!-- 1. 試合ビュー -->
         <div id="view-matches" class="view active">
-            <div class="card" style="padding-bottom: 8px;">
+            <div class="card" style="padding-bottom: 12px;">
                 <div class="section-title">⏩ NEXT (順番待ち)</div>
                 <div class="next-queue-container" id="nextQueueUI"></div>
             </div>
@@ -137,10 +143,10 @@
         <!-- 2. メンバービュー -->
         <div id="view-roster" class="view">
             <div class="card">
-                <h3 style="margin-top:0; font-size:1rem;">新規メンバー登録</h3>
+                <h3 style="margin-top:0; font-size:1.1rem; font-weight:900;">新規メンバー登録</h3>
                 <div style="display:flex; gap:8px;">
                     <input type="text" id="newMemberName" class="input-text" maxlength="6" placeholder="ニックネーム (6文字以内)">
-                    <button class="btn-primary" style="width:auto; padding:0 20px;" onclick="addMember()">追加</button>
+                    <button class="btn-primary" style="width:auto; padding:0 24px;" onclick="addMember()">追加</button>
                 </div>
             </div>
 
@@ -152,7 +158,7 @@
 
             <div class="card">
                 <div class="section-title">名簿・休憩エリア</div>
-                <p style="font-size:0.8rem; color:var(--text-sub); margin-top:-8px;">タップして待機列(参加中)へ移動</p>
+                <p style="font-size:0.9rem; color:var(--text-sub); margin-top:-8px; font-weight:bold;">タップして待機列(参加中)へ移動</p>
                 <div id="inactiveList"></div>
             </div>
         </div>
@@ -161,25 +167,25 @@
         <div id="view-settings" class="view">
             <div class="card">
                 <div class="section-title">コート設定</div>
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0;">
-                    <span>使用するコート数</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0;">
+                    <span style="font-weight:bold; font-size:1.1rem;">使用するコート数</span>
                     <div style="display:flex; align-items:center; gap:16px;">
-                        <button class="btn-secondary" onclick="changeMaxCourts(-1)">ー</button>
-                        <span id="settingCourtCount" style="font-size:1.2rem; font-weight:bold;">6</span>
-                        <button class="btn-secondary" onclick="changeMaxCourts(1)">＋</button>
+                        <button class="btn-secondary" style="padding:12px 20px; font-size:1.2rem;" onclick="changeMaxCourts(-1)">ー</button>
+                        <span id="settingCourtCount" style="font-size:1.5rem; font-weight:900;">6</span>
+                        <button class="btn-secondary" style="padding:12px 20px; font-size:1.2rem;" onclick="changeMaxCourts(1)">＋</button>
                     </div>
                 </div>
             </div>
 
             <div class="card">
                 <div class="section-title">データ管理・共有</div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom: 16px;">
-                    <button class="btn-secondary" onclick="exportRoster()">📤 名簿保存 (共有)</button>
-                    <button class="btn-secondary" onclick="document.getElementById('importFile').click()">📥 名簿読込</button>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom: 24px;">
+                    <button class="btn-secondary" style="padding:16px; font-size:1rem;" onclick="exportRoster()">📤 名簿保存 (共有)</button>
+                    <button class="btn-secondary" style="padding:16px; font-size:1rem;" onclick="document.getElementById('importFile').click()">📥 名簿読込</button>
                     <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importRoster(event)">
                 </div>
-                <hr style="border:none; border-top:1px solid var(--border); margin:16px 0;">
-                <button class="btn-danger" style="background:#FEF2F2; color:#DC2626; border:1px solid #FECACA; margin-bottom:12px;" onclick="startNewDay()">🌅 練習を始める (本日リセット)</button>
+                <hr style="border:none; border-top:2px solid var(--border); margin:24px 0;">
+                <button class="btn-danger" style="background:#FEF2F2; color:#DC2626; border:2px solid #FECACA; margin-bottom:16px;" onclick="startNewDay()">🌅 練習を始める (本日リセット)</button>
                 <button class="btn-danger" onclick="resetAllData()">⚠️ アプリ初期化 (名簿も削除)</button>
             </div>
         </div>
@@ -201,10 +207,10 @@
     <!-- モーダル -->
     <div class="modal-overlay" id="statusModal" onclick="closeModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h2 id="modalPlayerName" style="margin-top:0;">名前</h2>
-            <p style="font-size:0.9rem; color:var(--text-sub); margin-bottom:24px;">このメンバーを待機列から外し、休憩エリアへ移動します。</p>
-            <button class="btn-primary" style="background:#EF4444; margin-bottom:12px;" onclick="execStatusChange('inactive')">☕ 休憩・帰宅する</button>
-            <button class="btn-secondary" style="width:100%; padding:14px;" onclick="closeModal()">キャンセル</button>
+            <h2 id="modalPlayerName" style="margin-top:0; font-size:1.5rem; font-weight:900;">名前</h2>
+            <p style="font-size:1rem; color:var(--text-sub); margin-bottom:24px; font-weight:bold;">このメンバーを待機列から外し、休憩エリアへ移動します。</p>
+            <button class="btn-primary" style="background:#EF4444; margin-bottom:12px; font-size:1.1rem;" onclick="execStatusChange('inactive')">☕ 休憩・帰宅する</button>
+            <button class="btn-secondary" style="width:100%; padding:16px; font-size:1.1rem;" onclick="closeModal()">キャンセル</button>
         </div>
     </div>
 
@@ -238,7 +244,7 @@
         }
 
         let db = { players: [], queue: [], courts: [], maxCourts: 6 };
-        const STORAGE_KEY = 'badmin_v11_data';
+        const STORAGE_KEY = 'badmin_v12_data';
         let stateHistory = [];
 
         window.onload = function() {
@@ -440,7 +446,7 @@
                                 <div class="status-dot dot-inactive"></div>
                                 <div class="member-name">${p.name}</div>
                             </div>
-                            <div class="member-meta"><span style="color:var(--primary); font-weight:bold;">＋ 受付</span></div>
+                            <div class="member-meta"><span style="color:var(--primary); font-weight:900;">＋ 受付</span></div>
                         </div>`;
                 } else {
                     let isNext = (p.status === 'waiting' && db.queue.indexOf(p.id) < 4 && db.queue.indexOf(p.id) !== -1);
@@ -471,9 +477,9 @@
             for (let i = 0; i < 4; i++) {
                 if (i < db.queue.length) {
                     let p = db.players.find(pl => pl.id === db.queue[i]);
-                    nextHtml += `<div class="next-slot"><div>${p.name}</div><div style="font-size:0.7rem; font-weight:normal;">(${p.playCount}回)</div></div>`;
+                    nextHtml += `<div class="next-slot"><div class="next-slot-name">${p.name}</div><div style="font-size:0.8rem; font-weight:bold;">(${p.playCount}回)</div></div>`;
                 } else {
-                    nextHtml += `<div class="next-slot empty">不足</div>`;
+                    nextHtml += `<div class="next-slot empty"><div class="next-slot-name">不足</div></div>`;
                 }
             }
             document.getElementById('nextQueueUI').innerHTML = nextHtml;
@@ -488,11 +494,11 @@
                     let checked = c.selected ? "checked" : "";
 
                     courtsHtml += `
-                        <div class="card court-card" style="${c.selected ? 'border-color:var(--primary);' : ''}">
+                        <div class="card court-card" style="${c.selected ? 'border-color:var(--primary); box-shadow: 0 0 0 2px var(--primary);' : ''}">
                             <div class="court-header">
                                 <span class="court-title">コート ${c.id}</span>
-                                <label style="display:flex; align-items:center; gap:6px; font-size:0.9rem; color:var(--text-sub); font-weight:bold;">
-                                    <input type="checkbox" style="transform:scale(1.2);" onchange="toggleCheck(${idx}, this.checked)" ${checked}> 再抽選
+                                <label style="display:flex; align-items:center; gap:8px; font-size:1rem; color:var(--text-sub); font-weight:900; cursor:pointer;">
+                                    <input type="checkbox" style="transform:scale(1.4);" onchange="toggleCheck(${idx}, this.checked)" ${checked}> 再抽選
                                 </label>
                             </div>
                             <div class="match-row">
@@ -506,13 +512,13 @@
                                     <div class="player-name">${p4}</div>
                                 </div>
                             </div>
-                            <button class="btn-secondary" style="color:#DC2626; background:#FEE2E2;" onclick="endCourt(${idx})">試合終了 (空ける)</button>
+                            <button class="btn-secondary" style="color:#DC2626; background:#FEE2E2; padding:16px; font-size:1.1rem;" onclick="endCourt(${idx})">試合終了 (空ける)</button>
                         </div>`;
                 } else {
                     courtsHtml += `
                         <div class="card court-card">
                             <div class="court-header"><span class="court-title" style="color:var(--text-sub);">コート ${c.id}</span></div>
-                            <div style="text-align:center; padding:16px 0; color:var(--text-sub); font-weight:bold;">待機中 (空き)</div>
+                            <div style="text-align:center; padding:32px 0; color:var(--text-sub); font-weight:900; font-size:1.2rem;">待機中 (空き)</div>
                             <button class="btn-primary" onclick="fillCourt(${idx})">▶ 次の4人を入れる</button>
                         </div>`;
                 }
@@ -520,32 +526,20 @@
             document.getElementById('courtsArea').innerHTML = courtsHtml;
         }
 
-        // ==========================================
-        // iPad/iOS対応エクスポート処理 (共有メニュー表示)
-        // ==========================================
+        // iOS Share Sheet
         function exportRoster() {
             let rosterData = { players: db.players.map(p => ({ id: p.id, name: p.name })) };
             let jsonString = JSON.stringify(rosterData);
             let blob = new Blob([jsonString], { type: "application/json" });
             let file = new File([blob], "roster.json", { type: "application/json" });
 
-            // iOS / iPadOS向け 共有シート呼び出し
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                navigator.share({
-                    title: 'バドミントン名簿',
-                    files: [file]
-                }).catch(err => {
-                    console.log("共有キャンセル", err);
-                });
+                navigator.share({ title: 'バドミントン名簿', files: [file] }).catch(err => console.log(err));
             } else {
-                // パソコン等のための通常ダウンロード
                 let url = URL.createObjectURL(blob);
                 let dlNode = document.createElement('a');
-                dlNode.href = url;
-                dlNode.download = "roster.json";
-                document.body.appendChild(dlNode);
-                dlNode.click();
-                dlNode.remove();
+                dlNode.href = url; dlNode.download = "roster.json";
+                document.body.appendChild(dlNode); dlNode.click(); dlNode.remove();
                 URL.revokeObjectURL(url);
             }
         }
