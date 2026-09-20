@@ -6,7 +6,6 @@
     <title>バドミントン組み合わせボード</title>
     <style>
         :root {
-            /* モダンなアプリ風カラーパレット */
             --primary: #4F46E5;
             --primary-dark: #4338CA;
             --bg-base: #F3F4F6;
@@ -14,14 +13,10 @@
             --text-main: #111827;
             --text-sub: #6B7280;
             --border: #E5E7EB;
-            
-            /* ステータスカラー */
             --status-waiting: #F59E0B;
             --status-next: #8B5CF6;
             --status-playing: #10B981;
             --status-inactive: #9CA3AF;
-            
-            /* UI設計 */
             --nav-height: 65px;
             --header-height: 56px;
         }
@@ -39,43 +34,22 @@
             overflow-x: hidden;
         }
 
-        /* ------------------------
-           1. グローバルヘッダー
-           ------------------------ */
         header {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            height: var(--header-height);
-            background: var(--bg-surface);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            z-index: 50;
+            position: fixed; top: 0; left: 0; right: 0; height: var(--header-height); background: var(--bg-surface);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); z-index: 50;
         }
         .header-title { font-size: 1.2rem; font-weight: 800; color: var(--primary); margin: 0; }
         .btn-undo {
-            background: #F3F4F6; color: var(--text-main); border: none;
-            padding: 8px 12px; border-radius: 20px; font-weight: bold; font-size: 0.9rem;
-            display: flex; align-items: center; gap: 4px; cursor: pointer;
+            background: #F3F4F6; color: var(--text-main); border: none; padding: 8px 12px; border-radius: 20px;
+            font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; gap: 4px; cursor: pointer;
         }
         .btn-undo:disabled { opacity: 0.4; cursor: not-allowed; }
-        .btn-undo:active:not(:disabled) { background: #E5E7EB; }
 
-        /* ------------------------
-           2. ボトムナビゲーション
-           ------------------------ */
         .bottom-nav {
-            position: fixed;
-            bottom: 0; left: 0; right: 0;
-            height: calc(var(--nav-height) + env(safe-area-inset-bottom));
-            background: var(--bg-surface);
-            display: flex;
-            justify-content: space-around;
-            padding-bottom: env(safe-area-inset-bottom);
-            box-shadow: 0 -1px 3px rgba(0,0,0,0.05);
-            z-index: 50;
+            position: fixed; bottom: 0; left: 0; right: 0; height: calc(var(--nav-height) + env(safe-area-inset-bottom));
+            background: var(--bg-surface); display: flex; justify-content: space-around;
+            padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -1px 3px rgba(0,0,0,0.05); z-index: 50;
         }
         .nav-item {
             flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -84,36 +58,24 @@
         .nav-item.active { color: var(--primary); }
         .nav-icon { font-size: 1.4rem; }
 
-        /* ------------------------
-           3. ビュー (画面切り替え用)
-           ------------------------ */
         .view { display: none; padding: 16px; animation: fadeIn 0.2s ease-out; }
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ------------------------
-           4. 共通コンポーネント
-           ------------------------ */
         .section-title { font-size: 1.1rem; font-weight: bold; margin: 0 0 12px 0; color: var(--text-main); display: flex; align-items: center; justify-content: space-between;}
         .card { background: var(--bg-surface); border-radius: 16px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 16px; }
         
-        .btn-primary { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 1rem; width: 100%; cursor: pointer; transition: transform 0.1s; }
-        .btn-primary:active { transform: scale(0.98); background: var(--primary-dark); }
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 1rem; width: 100%; cursor: pointer; }
         .btn-secondary { background: #E5E7EB; color: var(--text-main); border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .btn-danger { background: #FEE2E2; color: #DC2626; border: none; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 1rem; width: 100%; cursor: pointer; }
 
         .input-text { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; background: var(--bg-base); outline: none; }
-        .input-text:focus { border-color: var(--primary); }
-
-        /* ------------------------
-           5. 試合ビュー (Matches)
-           ------------------------ */
+        
         .next-queue-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; }
         .next-slot {
-            flex: 0 0 auto; width: 80px; height: 80px; border-radius: 50%;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            background: #F3E8FF; border: 2px solid var(--status-next); color: var(--status-next);
-            font-weight: bold; scroll-snap-align: start;
+            flex: 0 0 auto; width: 80px; height: 80px; border-radius: 50%; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; background: #F3E8FF; border: 2px solid var(--status-next);
+            color: var(--status-next); font-weight: bold; scroll-snap-align: start;
         }
         .next-slot.empty { background: var(--bg-base); border: 2px dashed var(--border); color: var(--text-sub); }
 
@@ -130,29 +92,19 @@
         
         .vs-badge { background: var(--text-main); color: white; font-size: 0.7rem; font-weight: bold; padding: 4px 8px; border-radius: 12px; margin: 0 8px; }
         .match-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-grow: 1;}
-
         .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;}
 
-        /* ------------------------
-           6. メンバービュー (Roster)
-           ------------------------ */
-        .list-row {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer;
-        }
+        .list-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
         .list-row:last-child { border-bottom: none; }
-        .list-row:active { opacity: 0.7; }
         .member-info { display: flex; align-items: center; gap: 12px; }
         .status-dot { width: 12px; height: 12px; border-radius: 50%; }
         .dot-waiting { background: var(--status-waiting); }
         .dot-playing { background: var(--status-playing); }
         .dot-inactive { background: var(--status-inactive); }
         .dot-next { background: var(--status-next); box-shadow: 0 0 6px var(--status-next);}
-        
         .member-name { font-weight: bold; font-size: 1.1rem; }
         .member-meta { font-size: 0.8rem; color: var(--text-sub); display: flex; gap: 8px;}
 
-        /* モーダル */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: flex-end; padding: 16px; padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
         .modal-content { background: var(--bg-surface); padding: 24px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; animation: slideUp 0.2s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -160,27 +112,17 @@
 </head>
 <body>
 
-    <!-- グローバルヘッダー -->
     <header>
-        <h1 class="header-title">バドミントン管理</h1>
-        <button id="btnUndo" class="btn-undo" onclick="undoAction()" disabled>
-            <span>↩️</span> 戻る
-        </button>
+        <h1 class="header-title">バドミントン管理 V11</h1>
+        <button id="btnUndo" class="btn-undo" onclick="undoAction()" disabled><span>↩️</span> 戻る</button>
     </header>
 
-    <!-- メインコンテンツ領域 -->
     <main>
         <!-- 1. 試合ビュー -->
         <div id="view-matches" class="view active">
-            
             <div class="card" style="padding-bottom: 8px;">
-                <div class="section-title">
-                    ⏩ NEXT (順番待ち)
-                    <span style="font-size: 0.8rem; font-weight:normal; color:var(--text-sub);">※自動補充されます</span>
-                </div>
-                <div class="next-queue-container" id="nextQueueUI">
-                    <!-- NEXTプレイヤーがここに生成される -->
-                </div>
+                <div class="section-title">⏩ NEXT (順番待ち)</div>
+                <div class="next-queue-container" id="nextQueueUI"></div>
             </div>
 
             <div class="action-grid">
@@ -189,12 +131,10 @@
             </div>
 
             <div class="section-title">コート状況 (<span id="courtCountTxt">6</span>面)</div>
-            <div class="courts-grid" id="courtsArea">
-                <!-- コートカードがここに生成される -->
-            </div>
+            <div class="courts-grid" id="courtsArea"></div>
         </div>
 
-        <!-- 2. メンバービュー (名簿・受付) -->
+        <!-- 2. メンバービュー -->
         <div id="view-roster" class="view">
             <div class="card">
                 <h3 style="margin-top:0; font-size:1rem;">新規メンバー登録</h3>
@@ -205,21 +145,15 @@
             </div>
 
             <div class="card">
-                <div class="section-title">
-                    参加中メンバー (<span id="activeCount" style="color:var(--primary);">0</span>)
-                </div>
-                <div id="presentList">
-                    <!-- 参加中リスト -->
-                </div>
+                <div class="section-title">参加中メンバー (<span id="activeCount" style="color:var(--primary);">0</span>)</div>
+                <div id="presentList"></div>
                 <div style="text-align:center; padding:16px; color:var(--text-sub); display:none;" id="emptyPresent">参加中はいません</div>
             </div>
 
             <div class="card">
                 <div class="section-title">名簿・休憩エリア</div>
                 <p style="font-size:0.8rem; color:var(--text-sub); margin-top:-8px;">タップして待機列(参加中)へ移動</p>
-                <div id="inactiveList">
-                    <!-- 休憩・未受付リスト -->
-                </div>
+                <div id="inactiveList"></div>
             </div>
         </div>
 
@@ -240,7 +174,7 @@
             <div class="card">
                 <div class="section-title">データ管理・共有</div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom: 16px;">
-                    <button class="btn-secondary" onclick="exportRoster()">📤 名簿保存</button>
+                    <button class="btn-secondary" onclick="exportRoster()">📤 名簿保存 (共有)</button>
                     <button class="btn-secondary" onclick="document.getElementById('importFile').click()">📥 名簿読込</button>
                     <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importRoster(event)">
                 </div>
@@ -251,23 +185,20 @@
         </div>
     </main>
 
-    <!-- ボトムナビゲーション (GET方式ルーティング) -->
+    <!-- ボトムナビゲーション -->
     <nav class="bottom-nav">
         <a href="?view=matches" class="nav-item" id="nav-matches" onclick="routeTo(event, 'matches')">
-            <span class="nav-icon">🏸</span>
-            <span>試合</span>
+            <span class="nav-icon">🏸</span><span>試合</span>
         </a>
         <a href="?view=roster" class="nav-item" id="nav-roster" onclick="routeTo(event, 'roster')">
-            <span class="nav-icon">👥</span>
-            <span>メンバー</span>
+            <span class="nav-icon">👥</span><span>メンバー</span>
         </a>
         <a href="?view=settings" class="nav-item" id="nav-settings" onclick="routeTo(event, 'settings')">
-            <span class="nav-icon">⚙️</span>
-            <span>設定</span>
+            <span class="nav-icon">⚙️</span><span>設定</span>
         </a>
     </nav>
 
-    <!-- アクションモーダル -->
+    <!-- モーダル -->
     <div class="modal-overlay" id="statusModal" onclick="closeModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h2 id="modalPlayerName" style="margin-top:0;">名前</h2>
@@ -278,16 +209,10 @@
     </div>
 
     <script>
-        // ==========================================
-        // ルーティング制御 (GETパラメータ & SPA)
-        // ==========================================
         function initRouter() {
-            // URLから ?view=xxx を取得、デフォルトは matches
             const params = new URLSearchParams(window.location.search);
             const view = params.get('view') || 'matches';
             activateView(view);
-
-            // ブラウザの「戻る」「進む」ボタン対応
             window.addEventListener('popstate', (e) => {
                 const stateView = e.state ? e.state.view : (new URLSearchParams(window.location.search).get('view') || 'matches');
                 activateView(stateView);
@@ -295,34 +220,25 @@
         }
 
         function routeTo(event, viewId) {
-            event.preventDefault(); // 通常のページリロードをキャンセル
+            event.preventDefault();
             const url = new URL(window.location);
             url.searchParams.set('view', viewId);
-            // 履歴に追加し、URLを書き換える (GET方式の要件を満たす)
             window.history.pushState({ view: viewId }, '', url);
             activateView(viewId);
         }
 
         function activateView(viewId) {
-            // 全てのビューを非表示
             document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            
-            // 指定のビューを表示
             const viewEl = document.getElementById(`view-${viewId}`);
             const navEl = document.getElementById(`nav-${viewId}`);
             if (viewEl) viewEl.classList.add('active');
             if (navEl) navEl.classList.add('active');
-            
-            // 画面上部へスクロール
             window.scrollTo(0, 0);
         }
 
-        // ==========================================
-        // データ・ロジック (V9ベースの堅牢設計)
-        // ==========================================
         let db = { players: [], queue: [], courts: [], maxCourts: 6 };
-        const STORAGE_KEY = 'badmin_v10_data';
+        const STORAGE_KEY = 'badmin_v11_data';
         let stateHistory = [];
 
         window.onload = function() {
@@ -358,11 +274,8 @@
             }
         }
 
-        function updateUndoButton() {
-            document.getElementById('btnUndo').disabled = stateHistory.length === 0;
-        }
+        function updateUndoButton() { document.getElementById('btnUndo').disabled = stateHistory.length === 0; }
 
-        // システム操作
         function changeMaxCourts(delta) {
             let n = db.maxCourts + delta;
             if (delta < 0) {
@@ -389,7 +302,7 @@
                 db.queue = [];
                 db.courts.forEach(c => { c.p = []; c.selected = false; });
                 render();
-                routeTo(new Event('click'), 'roster'); // 名簿画面へ遷移
+                routeTo(new Event('click'), 'roster');
             }
         }
         
@@ -402,7 +315,6 @@
             }
         }
 
-        // プレイヤー操作
         function addMember() {
             let input = document.getElementById('newMemberName');
             let name = input.value.trim();
@@ -429,7 +341,6 @@
             let player = db.players.find(p => p.id === id);
             if (!player) return;
             if (player.status === 'playing') return alert("現在試合中です。先にコートを空けてください。");
-            
             currentModalPlayerId = id;
             document.getElementById('modalPlayerName').innerText = player.name + " さん";
             document.getElementById('statusModal').style.display = 'flex';
@@ -453,7 +364,6 @@
             render();
         }
 
-        // コート操作
         function endCourt(idx) {
             saveStateToHistory();
             let court = db.courts[idx];
@@ -513,17 +423,11 @@
             render();
         }
 
-        // ==========================================
-        // 描画ロジック (UI更新)
-        // ==========================================
         function render() {
             save();
-            
-            // 設定画面の数値更新
             document.getElementById('courtCountTxt').innerText = db.maxCourts;
             document.getElementById('settingCourtCount').innerText = db.maxCourts;
 
-            // 名簿・受付リストの描画
             let inactiveHtml = "";
             let presentHtml = "";
             let presentCount = 0;
@@ -563,7 +467,6 @@
             document.getElementById('activeCount').innerText = presentCount;
             document.getElementById('emptyPresent').style.display = presentCount === 0 ? 'block' : 'none';
 
-            // NEXTキューUI (横スクロール)
             let nextHtml = "";
             for (let i = 0; i < 4; i++) {
                 if (i < db.queue.length) {
@@ -575,7 +478,6 @@
             }
             document.getElementById('nextQueueUI').innerHTML = nextHtml;
 
-            // コートUI (カードスタイル)
             let courtsHtml = "";
             db.courts.forEach((c, idx) => {
                 if (c.p.length === 4) {
@@ -618,14 +520,36 @@
             document.getElementById('courtsArea').innerHTML = courtsHtml;
         }
 
-        // ファイルエクスポート・インポート
+        // ==========================================
+        // iPad/iOS対応エクスポート処理 (共有メニュー表示)
+        // ==========================================
         function exportRoster() {
             let rosterData = { players: db.players.map(p => ({ id: p.id, name: p.name })) };
-            let dlNode = document.createElement('a');
-            dlNode.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(rosterData));
-            dlNode.download = "roster.json";
-            document.body.appendChild(dlNode); dlNode.click(); dlNode.remove();
+            let jsonString = JSON.stringify(rosterData);
+            let blob = new Blob([jsonString], { type: "application/json" });
+            let file = new File([blob], "roster.json", { type: "application/json" });
+
+            // iOS / iPadOS向け 共有シート呼び出し
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                navigator.share({
+                    title: 'バドミントン名簿',
+                    files: [file]
+                }).catch(err => {
+                    console.log("共有キャンセル", err);
+                });
+            } else {
+                // パソコン等のための通常ダウンロード
+                let url = URL.createObjectURL(blob);
+                let dlNode = document.createElement('a');
+                dlNode.href = url;
+                dlNode.download = "roster.json";
+                document.body.appendChild(dlNode);
+                dlNode.click();
+                dlNode.remove();
+                URL.revokeObjectURL(url);
+            }
         }
+
         function importRoster(event) {
             let file = event.target.files[0];
             if (!file) return;
