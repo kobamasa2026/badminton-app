@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>バドミントン組み合わせボード V12</title>
+    <title>バドミントン組み合わせボード V13</title>
     <style>
         :root {
             --primary: #4F46E5;
-            --primary-dark: #4338CA;
             --bg-base: #F3F4F6;
             --bg-surface: #FFFFFF;
             --text-main: #111827;
@@ -25,12 +24,8 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-base);
-            color: var(--text-main);
-            margin: 0;
-            padding: 0;
-            padding-top: var(--header-height);
-            padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom));
+            background-color: var(--bg-base); color: var(--text-main); margin: 0; padding: 0;
+            padding-top: var(--header-height); padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom));
             overflow-x: hidden;
         }
 
@@ -39,7 +34,7 @@
             display: flex; align-items: center; justify-content: space-between; padding: 0 16px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05); z-index: 50;
         }
-        .header-title { font-size: 1.2rem; font-weight: 800; color: var(--primary); margin: 0; }
+        .header-title { font-size: 1.2rem; font-weight: 900; color: var(--primary); margin: 0; }
         .btn-undo {
             background: #F3F4F6; color: var(--text-main); border: none; padding: 8px 12px; border-radius: 20px;
             font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; gap: 4px; cursor: pointer;
@@ -68,21 +63,22 @@
         .btn-primary { background: var(--primary); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 900; font-size: 1.1rem; width: 100%; cursor: pointer; }
         .btn-secondary { background: #E5E7EB; color: var(--text-main); border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .btn-danger { background: #FEE2E2; color: #DC2626; border: none; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 1rem; width: 100%; cursor: pointer; }
-
         .input-text { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; background: var(--bg-base); outline: none; }
         
-        /* NEXT 巨大化 */
+        /* NEXT 待機列 */
         .next-queue-container { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 12px; scroll-snap-type: x mandatory; }
         .next-slot {
             flex: 0 0 auto; width: 100px; height: 100px; border-radius: 50%; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; background: #F3E8FF; border: 3px solid var(--status-next);
-            color: var(--status-next); font-weight: 900; scroll-snap-align: start; box-shadow: 0 4px 6px rgba(139, 92, 246, 0.2);
+            justify-content: center; align-items: center; background: var(--bg-base); border: 2px solid var(--border);
+            color: var(--text-main); font-weight: 900; scroll-snap-align: start; cursor: pointer; transition: all 0.2s;
         }
-        .next-slot-name { font-size: 1.3rem; margin-bottom: 2px;}
-        .next-slot.empty { background: var(--bg-base); border: 3px dashed var(--border); color: var(--text-sub); box-shadow: none; }
-        .next-slot.empty .next-slot-name { font-size: 1.1rem; }
+        .next-slot.top-4 { background: #F3E8FF; border: 3px solid var(--status-next); color: var(--status-next); box-shadow: 0 4px 6px rgba(139, 92, 246, 0.2); }
+        .next-slot.manual-selected { background: #FEF3C7; border: 4px solid #F59E0B; color: #D97706; box-shadow: 0 0 12px rgba(245, 158, 11, 0.5); transform: scale(1.05); }
+        .next-slot-name { font-size: 1.2rem; margin-bottom: 2px; text-align: center;}
+        
+        .manual-fill-area { background: #FEF3C7; padding: 12px; border-radius: 12px; margin-bottom: 16px; border: 1px solid #FCD34D; text-align: center;}
 
-        /* コート 巨大化 */
+        /* コート */
         .courts-grid { display: grid; gap: 20px; grid-template-columns: 1fr; }
         @media(min-width: 768px) { .courts-grid { grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); } }
         
@@ -92,7 +88,7 @@
         
         .team-box { background: var(--bg-base); border-radius: 16px; padding: 16px 8px; flex: 1; text-align: center; }
         .team-box.playing { background: #D1FAE5; color: #022C22; border: 4px solid var(--status-playing); box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2); }
-        .player-name { font-weight: 900; font-size: clamp(1.6rem, 5vw + 0.5rem, 2.6rem); margin: 6px 0; letter-spacing: 1px; line-height: 1.15; word-break: keep-all;}
+        .player-name { font-weight: 900; font-size: clamp(1.4rem, 4.5vw + 0.5rem, 2.2rem); margin: 6px 0; letter-spacing: 1px; line-height: 1.15; word-break: keep-all;}
         
         .vs-badge { background: var(--text-main); color: white; font-size: 1.1rem; font-weight: 900; padding: 8px 16px; border-radius: 16px; margin: 0 12px; }
         .match-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-grow: 1;}
@@ -119,7 +115,7 @@
 <body>
 
     <header>
-        <h1 class="header-title">バドミントン管理 V12</h1>
+        <h1 class="header-title">ボード V13 (受付番号対応)</h1>
         <button id="btnUndo" class="btn-undo" onclick="undoAction()" disabled><span>↩️</span> 戻る</button>
     </header>
 
@@ -127,7 +123,16 @@
         <!-- 1. 試合ビュー -->
         <div id="view-matches" class="view active">
             <div class="card" style="padding-bottom: 12px;">
-                <div class="section-title">⏩ NEXT (順番待ち)</div>
+                <div class="section-title">
+                    ⏩ 待機列 全体
+                    <span style="font-size: 0.85rem; font-weight:normal; color:var(--text-sub);">※タップで優先選択</span>
+                </div>
+                
+                <!-- 手動割り当て用の特別エリア -->
+                <div id="manualFillArea" class="manual-fill-area" style="display:none;">
+                    <button id="btnManualFill" class="btn-primary" onclick="fillCourtWithSelected()" disabled>選択中... (0/4名)</button>
+                </div>
+
                 <div class="next-queue-container" id="nextQueueUI"></div>
             </div>
 
@@ -243,9 +248,10 @@
             window.scrollTo(0, 0);
         }
 
-        let db = { players: [], queue: [], courts: [], maxCourts: 6 };
-        const STORAGE_KEY = 'badmin_v12_data';
+        let db = { players: [], queue: [], courts: [], maxCourts: 6, dailyCounter: 1 };
+        const STORAGE_KEY = 'badmin_v13_data';
         let stateHistory = [];
+        let manualSelectedIds = []; // マニュアル選択用の一時ステータス
 
         window.onload = function() {
             initRouter();
@@ -257,6 +263,7 @@
                     if (parsed.queue) db.queue = parsed.queue;
                     if (parsed.courts) db.courts = parsed.courts;
                     if (parsed.maxCourts) db.maxCourts = parsed.maxCourts;
+                    if (parsed.dailyCounter) db.dailyCounter = parsed.dailyCounter;
                 } catch(e) {}
             }
             adjustCourts();
@@ -275,12 +282,17 @@
         function undoAction() {
             if (stateHistory.length > 0) {
                 db = JSON.parse(stateHistory.pop());
+                manualSelectedIds = []; // 戻る時は手動選択をクリア
                 updateUndoButton();
                 render();
             }
         }
 
         function updateUndoButton() { document.getElementById('btnUndo').disabled = stateHistory.length === 0; }
+
+        function formatName(p) {
+            return p.dailyNum ? `${p.dailyNum}: ${p.name}` : p.name;
+        }
 
         function changeMaxCourts(delta) {
             let n = db.maxCourts + delta;
@@ -302,11 +314,13 @@
         }
 
         function startNewDay() {
-            if (confirm("名簿は残したまま、本日のコート・プレイ回数をすべてリセットしますか？")) {
+            if (confirm("名簿は残したまま、本日のコート・受付番号・プレイ回数をすべてリセットしますか？")) {
                 saveStateToHistory();
-                db.players.forEach(p => { p.status = 'inactive'; p.playCount = 0; });
+                db.dailyCounter = 1;
+                db.players.forEach(p => { p.status = 'inactive'; p.playCount = 0; p.dailyNum = null; });
                 db.queue = [];
                 db.courts.forEach(c => { c.p = []; c.selected = false; });
+                manualSelectedIds = [];
                 render();
                 routeTo(new Event('click'), 'roster');
             }
@@ -314,8 +328,9 @@
         
         function resetAllData() {
             if (confirm("【警告】名簿を含むすべてのデータを完全に削除します。よろしいですか？")) {
-                db = { players: [], queue: [], courts: [], maxCourts: 6 };
+                db = { players: [], queue: [], courts: [], maxCourts: 6, dailyCounter: 1 };
                 stateHistory = [];
+                manualSelectedIds = [];
                 adjustCourts();
                 render();
             }
@@ -328,7 +343,7 @@
             if (db.players.some(p => p.name === name)) return alert("既に登録されています。");
             
             saveStateToHistory();
-            db.players.push({ id: Date.now(), name: name, status: 'inactive', playCount: 0 });
+            db.players.push({ id: Date.now(), name: name, status: 'inactive', playCount: 0, dailyNum: null });
             input.value = "";
             render();
         }
@@ -337,6 +352,13 @@
             let player = db.players.find(p => p.id === id);
             if (!player) return;
             saveStateToHistory();
+            
+            // 受付時にその日初めてなら番号を付与
+            if (!player.dailyNum) {
+                db.dailyCounter = db.dailyCounter || 1;
+                player.dailyNum = db.dailyCounter++;
+            }
+            
             player.status = 'waiting';
             db.queue.push(id); 
             render();
@@ -348,7 +370,7 @@
             if (!player) return;
             if (player.status === 'playing') return alert("現在試合中です。先にコートを空けてください。");
             currentModalPlayerId = id;
-            document.getElementById('modalPlayerName').innerText = player.name + " さん";
+            document.getElementById('modalPlayerName').innerText = formatName(player) + " さん";
             document.getElementById('statusModal').style.display = 'flex';
         }
 
@@ -364,7 +386,9 @@
                 saveStateToHistory();
                 db.queue = db.queue.filter(q => q !== player.id);
                 player.status = newStatus;
-                if (newStatus === 'waiting') db.queue.push(player.id);
+                if (newStatus === 'waiting') {
+                    db.queue.push(player.id);
+                }
             }
             document.getElementById('statusModal').style.display = 'none';
             render();
@@ -373,10 +397,14 @@
         function endCourt(idx) {
             saveStateToHistory();
             let court = db.courts[idx];
-            court.p.forEach(id => {
+            
+            // 試合が終わった4人はその場でシャッフル(抽選)して待機列の最後尾へ
+            let leaving = [...court.p].sort(() => Math.random() - 0.5);
+            leaving.forEach(id => {
                 let player = db.players.find(p => p.id === id);
                 if (player) { player.status = 'waiting'; db.queue.push(id); }
             });
+            
             court.p = []; court.selected = false;
             render();
         }
@@ -402,7 +430,7 @@
 
             saveStateToHistory();
             let playersToAssign = db.queue.splice(0, courtsToFill * 4);
-            playersToAssign.sort(() => Math.random() - 0.5);
+            playersToAssign.sort(() => Math.random() - 0.5); // シャッフルして分散させる
 
             for (let i = 0; i < courtsToFill; i++) {
                 let court = emptyCourts[i];
@@ -412,6 +440,45 @@
                     p.status = 'playing'; p.playCount++; court.p.push(id);
                 });
             }
+            render();
+        }
+
+        // ==========================
+        // 監督によるマニュアル優先選択機能
+        // ==========================
+        function toggleManualSelect(id) {
+            if (manualSelectedIds.includes(id)) {
+                manualSelectedIds = manualSelectedIds.filter(x => x !== id);
+            } else {
+                if (manualSelectedIds.length < 4) {
+                    manualSelectedIds.push(id);
+                } else {
+                    alert("優先できるのは1回に4名までです。");
+                }
+            }
+            render();
+        }
+
+        function fillCourtWithSelected() {
+            if (manualSelectedIds.length !== 4) return;
+            
+            let emptyCourt = db.courts.find(c => c.p.length === 0);
+            if (!emptyCourt) return alert("空きコートがありません。先に試合を終了してください。");
+            
+            saveStateToHistory();
+            
+            // 選択された4人を列から抜く
+            db.queue = db.queue.filter(id => !manualSelectedIds.includes(id));
+            
+            manualSelectedIds.forEach(id => {
+                let p = db.players.find(pl => pl.id === id);
+                p.status = 'playing'; 
+                p.playCount++; 
+                emptyCourt.p.push(id);
+            });
+            
+            emptyCourt.p.sort(() => Math.random() - 0.5); // チームをシャッフル
+            manualSelectedIds = []; // 選択解除
             render();
         }
 
@@ -430,6 +497,9 @@
         }
 
         function render() {
+            // 列からいなくなった人がマニュアル選択に残らないようにクリーンアップ
+            manualSelectedIds = manualSelectedIds.filter(id => db.queue.includes(id));
+
             save();
             document.getElementById('courtCountTxt').innerText = db.maxCourts;
             document.getElementById('settingCourtCount').innerText = db.maxCourts;
@@ -444,7 +514,7 @@
                         <div class="list-row" onclick="checkIn(${p.id})">
                             <div class="member-info">
                                 <div class="status-dot dot-inactive"></div>
-                                <div class="member-name">${p.name}</div>
+                                <div class="member-name">${formatName(p)}</div>
                             </div>
                             <div class="member-meta"><span style="color:var(--primary); font-weight:900;">＋ 受付</span></div>
                         </div>`;
@@ -457,7 +527,7 @@
                         <div class="list-row" onclick="openPlayerMenu(${p.id})">
                             <div class="member-info">
                                 <div class="status-dot ${dotClass}"></div>
-                                <div class="member-name">${p.name}</div>
+                                <div class="member-name">${formatName(p)}</div>
                             </div>
                             <div class="member-meta">
                                 <span>${statusTxt}</span>
@@ -473,24 +543,53 @@
             document.getElementById('activeCount').innerText = presentCount;
             document.getElementById('emptyPresent').style.display = presentCount === 0 ? 'block' : 'none';
 
+            // NEXT待機列全体を描画
             let nextHtml = "";
-            for (let i = 0; i < 4; i++) {
-                if (i < db.queue.length) {
-                    let p = db.players.find(pl => pl.id === db.queue[i]);
-                    nextHtml += `<div class="next-slot"><div class="next-slot-name">${p.name}</div><div style="font-size:0.8rem; font-weight:bold;">(${p.playCount}回)</div></div>`;
-                } else {
-                    nextHtml += `<div class="next-slot empty"><div class="next-slot-name">不足</div></div>`;
-                }
+            if (db.queue.length === 0) {
+                nextHtml = `<div style="padding: 24px; color: var(--text-sub); width:100%; text-align:center;">待機中はいません</div>`;
+            } else {
+                db.queue.forEach((id, index) => {
+                    let p = db.players.find(pl => pl.id === id);
+                    if (!p) return;
+                    
+                    let isTop4 = index < 4;
+                    let isSelected = manualSelectedIds.includes(id);
+                    let slotClass = "next-slot" + (isTop4 ? " top-4" : "") + (isSelected ? " manual-selected" : "");
+                    
+                    nextHtml += `
+                        <div class="${slotClass}" onclick="toggleManualSelect(${id})">
+                            <div class="next-slot-name">${formatName(p)}</div>
+                            <div style="font-size:0.8rem; font-weight:bold;">(${p.playCount}回)</div>
+                        </div>`;
+                });
             }
             document.getElementById('nextQueueUI').innerHTML = nextHtml;
+
+            // マニュアル選択用のボタン制御
+            let manualBtnArea = document.getElementById('manualFillArea');
+            let btnManualFill = document.getElementById('btnManualFill');
+            if (manualSelectedIds.length > 0) {
+                manualBtnArea.style.display = 'block';
+                if (manualSelectedIds.length === 4) {
+                    btnManualFill.disabled = false;
+                    btnManualFill.innerText = "👑 選択した4人を空きコートへ";
+                    btnManualFill.style.background = "#F59E0B";
+                } else {
+                    btnManualFill.disabled = true;
+                    btnManualFill.innerText = `選択中... (${manualSelectedIds.length}/4名)`;
+                    btnManualFill.style.background = "#9CA3AF";
+                }
+            } else {
+                manualBtnArea.style.display = 'none';
+            }
 
             let courtsHtml = "";
             db.courts.forEach((c, idx) => {
                 if (c.p.length === 4) {
-                    let p1 = db.players.find(pl => pl.id === c.p[0])?.name;
-                    let p2 = db.players.find(pl => pl.id === c.p[1])?.name;
-                    let p3 = db.players.find(pl => pl.id === c.p[2])?.name;
-                    let p4 = db.players.find(pl => pl.id === c.p[3])?.name;
+                    let p1 = db.players.find(pl => pl.id === c.p[0]);
+                    let p2 = db.players.find(pl => pl.id === c.p[1]);
+                    let p3 = db.players.find(pl => pl.id === c.p[2]);
+                    let p4 = db.players.find(pl => pl.id === c.p[3]);
                     let checked = c.selected ? "checked" : "";
 
                     courtsHtml += `
@@ -503,13 +602,13 @@
                             </div>
                             <div class="match-row">
                                 <div class="team-box playing">
-                                    <div class="player-name">${p1}</div>
-                                    <div class="player-name">${p2}</div>
+                                    <div class="player-name">${p1 ? formatName(p1) : ""}</div>
+                                    <div class="player-name">${p2 ? formatName(p2) : ""}</div>
                                 </div>
                                 <div class="vs-badge">VS</div>
                                 <div class="team-box playing">
-                                    <div class="player-name">${p3}</div>
-                                    <div class="player-name">${p4}</div>
+                                    <div class="player-name">${p3 ? formatName(p3) : ""}</div>
+                                    <div class="player-name">${p4 ? formatName(p4) : ""}</div>
                                 </div>
                             </div>
                             <button class="btn-secondary" style="color:#DC2626; background:#FEE2E2; padding:16px; font-size:1.1rem;" onclick="endCourt(${idx})">試合終了 (空ける)</button>
@@ -526,7 +625,6 @@
             document.getElementById('courtsArea').innerHTML = courtsHtml;
         }
 
-        // iOS Share Sheet
         function exportRoster() {
             let rosterData = { players: db.players.map(p => ({ id: p.id, name: p.name })) };
             let jsonString = JSON.stringify(rosterData);
@@ -556,7 +654,7 @@
                         let added = 0;
                         imported.players.forEach(imp => {
                             if (!db.players.some(p => p.name === imp.name)) {
-                                db.players.push({ id: imp.id || Date.now()+Math.random(), name: imp.name, status: 'inactive', playCount: 0 });
+                                db.players.push({ id: imp.id || Date.now()+Math.random(), name: imp.name, status: 'inactive', playCount: 0, dailyNum: null });
                                 added++;
                             }
                         });
