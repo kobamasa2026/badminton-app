@@ -34,28 +34,43 @@
         .radio-group input { margin-right: 10px; transform: scale(1.5); }
         .start-btn { background-color: #34C759; color: white; border: none; padding: 15px 40px; font-size: 18px; font-weight: bold; border-radius: 20px; }
 
-        #score-screen { display: none; flex-direction: column; height: 100%; width: 100%; }
+        #score-screen { display: none; flex-direction: column; height: 100%; width: 100%; position: relative; }
         
         .player-area { flex: 1; display: flex; justify-content: center; align-items: center; font-size: 80px; font-weight: bold; transition: background-color 0.1s; position: relative;}
-        /* ゲーム終了時のオーバーレイ用テキスト */
         .player-area-gameover { position: absolute; font-size: 24px; color: white; background-color: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 5px;}
         #area-a { background-color: #3a0000; color: #ff4d4d; }
         #area-b { background-color: #001a3a; color: #4da6ff; }
         #area-a:active:not(.disabled) { background-color: #ff4d4d; color: #fff; }
         #area-b:active:not(.disabled) { background-color: #4da6ff; color: #fff; }
-        /* 試合終了後のタップ無効化用クラス */
         .player-area.disabled { opacity: 0.5; pointer-events: none; }
 
         .controls { height: 45px; display: flex; background-color: #333; }
         .ctrl-btn { flex: 1; background: transparent; border: none; color: white; font-size: 16px; font-weight: bold; }
         .ctrl-btn:first-child { border-right: 1px solid #555; color: #FFD60A; }
+
+        /* カスタム確認モーダル（ポップアップの代わり） */
+        #confirm-modal {
+            display: none; /* 初期は非表示 */
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.9);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        #confirm-modal p { font-size: 18px; margin-bottom: 20px; font-weight: bold; }
+        .modal-btn-group { display: flex; gap: 15px; }
+        .modal-btn { padding: 12px 20px; font-size: 16px; font-weight: bold; border: none; border-radius: 10px; }
+        .btn-cancel { background-color: #555; color: white; }
+        .btn-end { background-color: #ff3b30; color: white; }
     </style>
 </head>
 <body>
 
     <div id="settings-screen">
         <h1>バドミントン<br>スコアボード</h1>
-        <p class="subtitle">【Apple Watch是正版】</p>
+        <p class="subtitle">【終了ボタン修正版】</p>
         <div class="radio-group">
             <label><input type="radio" name="points" value="15"> 15点マッチ</label>
             <label><input type="radio" name="points" value="21" checked> 21点マッチ</label>
@@ -70,6 +85,15 @@
             <button class="ctrl-btn" onclick="endMatch()">終了</button>
         </div>
         <div id="area-b" class="player-area" onclick="addScore('B')">0</div>
+
+        <!-- カスタム確認画面 -->
+        <div id="confirm-modal">
+            <p>試合を終了しますか？</p>
+            <div class="modal-btn-group">
+                <button class="modal-btn btn-cancel" onclick="confirmEndMatch(false)">キャンセル</button>
+                <button class="modal-btn btn-end" onclick="confirmEndMatch(true)">終了する</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -78,32 +102,32 @@
         let targetPoint = 21;
         let history = []; 
         let currentServer = null;
-        let endgameTimeoutId = null; // ゲーム終了後の自動画面切り替えタイマーID
+        let endgameTimeoutId = null; 
 
         const screenSettings = document.getElementById('settings-screen');
         const screenScore = document.getElementById('score-screen');
         const displayA = document.getElementById('area-a');
         const displayB = document.getElementById('area-b');
         const playerAreas = document.querySelectorAll('.player-area');
+        const confirmModal = document.getElementById('confirm-modal');
 
         function startMatch() {
             const radios = document.getElementsByName('points');
             for (let i = 0; i < radios.length; i++) {
                 if (radios[i].checked) { targetPoint = parseInt(radios[i].value); break; }
             }
-            // スコアとタイマーの完全リセット
             scoreA = 0; scoreB = 0; history = []; currentServer = null;
             if (endgameTimeoutId) {
                 clearTimeout(endgameTimeoutId);
                 endgameTimeoutId = null;
             }
             
-            // 画面表示とタップ無効化の解除
             updateDisplay();
             playerAreas.forEach(area => area.classList.remove('disabled'));
             const oldOverlays = document.querySelectorAll('.player-area-gameover');
             oldOverlays.forEach(overlay => overlay.remove());
 
+            confirmModal.style.display = 'none'; // 確認画面を隠す
             screenSettings.style.display = 'none';
             screenScore.style.display = 'flex';
 
@@ -113,22 +137,16 @@
             }
         }
 
-        // 勝利判定ロジックの一元化
         function isGameOver() {
             const diff = Math.abs(scoreA - scoreB);
             const cappedScore = targetPoint === 21 ? 30 : 21;
             
-            if (scoreA === cappedScore || scoreB === cappedScore) {
-                return true;
-            }
-            if ((scoreA >= targetPoint || scoreB >= targetPoint) && diff >= 2) {
-                return true;
-            }
+            if (scoreA === cappedScore || scoreB === cappedScore) return true;
+            if ((scoreA >= targetPoint || scoreB >= targetPoint) && diff >= 2) return true;
             return false;
         }
 
         function addScore(player) {
-            // 試合終了後はタップしても点数が入らないようにする
             if (isGameOver()) return;
             
             history.push({ a: scoreA, b: scoreB, server: currentServer });
@@ -144,7 +162,6 @@
 
         function undoScore() {
             if (history.length > 0) {
-                // 自動終了タイマーをキャンセル
                 if (endgameTimeoutId) {
                     clearTimeout(endgameTimeoutId);
                     endgameTimeoutId = null;
@@ -155,7 +172,6 @@
                 scoreB = previousState.b;
                 currentServer = previousState.server;
                 
-                // 表示を戻し、タップ無効化も解除
                 updateDisplay();
                 playerAreas.forEach(area => area.classList.remove('disabled'));
                 const oldOverlays = document.querySelectorAll('.player-area-gameover');
@@ -165,20 +181,25 @@
             }
         }
 
-        // 手動終了（確認ポップアップ付き）
+        // --- 終了ボタンの処理を修正 ---
         function endMatch() {
-            if (confirm('試合を終了しますか？')) {
+            // Apple Watchで動かない標準ポップアップの代わりに、自作の確認画面を表示する
+            confirmModal.style.display = 'flex';
+        }
+
+        // 自作の確認画面のボタンが押された時の処理
+        function confirmEndMatch(isConfirmed) {
+            confirmModal.style.display = 'none'; // 確認画面を閉じる
+            if (isConfirmed) {
                 resetToSettingsScreen();
             }
         }
+        // ------------------------------
 
-        // 試合終了時の自動画面切り替え処理
         function checkWinner() {
             if (isGameOver()) {
-                // タップ領域を無効化（視覚的にも）
                 playerAreas.forEach(area => area.classList.add('disabled'));
                 
-                // 勝利したプレイヤーの画面に「Game set」と表示
                 const winnerAreaId = (currentServer === 'A') ? 'area-a' : 'area-b';
                 const winnerArea = document.getElementById(winnerAreaId);
                 const overlay = document.createElement('div');
@@ -186,8 +207,6 @@
                 overlay.innerText = 'Game set';
                 winnerArea.appendChild(overlay);
 
-                // 音声「Game set」が確実に終わる時間を確保してから設定画面へ
-                // Apple Watchの処理速度を考慮し、3秒（3000ms）に延ばしました。
                 if (endgameTimeoutId) clearTimeout(endgameTimeoutId);
                 endgameTimeoutId = setTimeout(() => {
                     resetToSettingsScreen();
@@ -195,10 +214,10 @@
             }
         }
 
-        // 設定画面に戻る共通処理
         function resetToSettingsScreen() {
             screenSettings.style.display = 'flex';
             screenScore.style.display = 'none';
+            confirmModal.style.display = 'none';
             scoreA = 0; scoreB = 0; history = []; currentServer = null;
             if (endgameTimeoutId) {
                 clearTimeout(endgameTimeoutId);
@@ -226,7 +245,7 @@
             let speakText = "";
             
             if (isGameOver()) {
-                speakText = "Game set"; // 試合終了の音声だけ。スコアは言わない。
+                speakText = "Game set";
             } else {
                 if (serverScore === receiverScore) {
                     speakText = serverText + " all";
@@ -234,7 +253,6 @@
                     speakText = serverText + ", " + receiverText;
                 }
                 
-                // マッチポイント判定
                 const nextScore = serverScore + 1;
                 const cappedScore = targetPoint === 21 ? 30 : 21;
                 let isMatchPoint = (nextScore === cappedScore);
